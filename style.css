@@ -1,0 +1,288 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --error-color: #ff4444;
+    --success-color: #00c851;
+    --border-radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #1a1a1a);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+h1 {
+    font-size: 32px;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.subtitle {
+    color: var(--tg-theme-hint-color, #666);
+    font-size: 14px;
+}
+
+/* Notification */
+.notification {
+    margin-bottom: 20px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.notification.error {
+    background: rgba(255, 68, 68, 0.1);
+    border-left: 4px solid var(--error-color);
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--error-color);
+    font-size: 14px;
+}
+
+.notification.success {
+    background: rgba(0, 200, 81, 0.1);
+    border-left: 4px solid var(--success-color);
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: var(--success-color);
+    font-size: 14px;
+}
+
+/* Form */
+.booking-form {
+    background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--tg-theme-text-color, #333);
+}
+
+.label-icon {
+    font-size: 18px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+    border-radius: 12px;
+    background: var(--tg-theme-bg-color, #ffffff);
+    color: var(--tg-theme-text-color, #000);
+    font-size: 16px;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Time Slots */
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.time-slot {
+    padding: 10px 8px;
+    text-align: center;
+    background: var(--tg-theme-bg-color, #ffffff);
+    border: 2px solid var(--tg-theme-hint-color, #e0e0e0);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--tg-theme-text-color, #333);
+}
+
+.time-slot:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.time-slot.selected {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: transparent;
+    transform: scale(1.02);
+}
+
+.time-slot.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.time-slot.disabled:hover {
+    transform: none;
+    border-color: var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 20px;
+    color: var(--tg-theme-hint-color, #999);
+    font-size: 14px;
+}
+
+/* Submit Button */
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+.submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-text, .btn-loading {
+    display: inline-block;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+}
+
+.footer p {
+    color: var(--tg-theme-hint-color, #888);
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.footer .small {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    body {
+        padding: 16px;
+    }
+    
+    .booking-form {
+        padding: 20px;
+    }
+    
+    .time-slots {
+        grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+        gap: 8px;
+    }
+    
+    .time-slot {
+        padding: 8px 6px;
+        font-size: 13px;
+    }
+    
+    h1 {
+        font-size: 28px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    input, select {
+        background: var(--tg-theme-bg-color, #1a1a1a);
+    }
+}
+
+/* Telegram specific */
+.tgme_widget_message_bubble {
+    background: var(--tg-theme-bg-color, #ffffff);
+}
