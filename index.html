@@ -38,7 +38,6 @@ body {
   min-height: 100vh;
 }
 
-/* Контейнер */
 .container {
   max-width: 1400px;
   margin: 0 auto;
@@ -135,7 +134,32 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Сетка портфолио */
+/* Описание мастера */
+.master-bio {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.master-bio h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+
+.master-bio p {
+  line-height: 1.8;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.master-bio strong {
+  color: var(--text);
+}
+
+/* Портфолио */
 .portfolio-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -160,11 +184,6 @@ body {
   height: 280px;
   object-fit: cover;
   background: var(--bg-elevated);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 14px;
 }
 
 .portfolio-info {
@@ -181,7 +200,7 @@ body {
   color: var(--text-muted);
 }
 
-/* Форма записи */
+/* Карточка записи */
 .booking-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -322,6 +341,10 @@ input:focus, select:focus, textarea:focus {
   background: var(--gray);
 }
 
+.size-btn.hidden {
+  display: none;
+}
+
 /* Календарь */
 .calendar {
   background: var(--bg-elevated);
@@ -379,7 +402,7 @@ input:focus, select:focus, textarea:focus {
   border-radius: 0;
 }
 
-.cal-day:hover:not(.disabled) {
+.cal-day:hover:not(.disabled):not(.booked) {
   background: var(--gray);
 }
 
@@ -391,6 +414,14 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-muted);
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.cal-day.booked {
+  color: var(--text-muted);
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+  position: relative;
 }
 
 .cal-day.today {
@@ -426,6 +457,62 @@ input:focus, select:focus, textarea:focus {
   opacity: 0.3;
   cursor: not-allowed;
   text-decoration: line-through;
+}
+
+/* Ссылка на референс */
+.ref-link-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ref-link-group input {
+  flex: 1;
+}
+
+.ref-add-btn {
+  padding: 12px 20px;
+  background: var(--gray);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.ref-add-btn:hover {
+  background: var(--gray-light);
+}
+
+.ref-list {
+  margin-top: 10px;
+}
+
+.ref-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  padding: 4px 10px;
+  margin: 4px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+}
+
+.ref-item a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.ref-item a:hover {
+  color: var(--text);
+}
+
+.ref-remove {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
 /* Кнопки */
@@ -583,19 +670,6 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
-/* Скролл */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gray);
-}
-
 /* Лоадер */
 .loader {
   display: inline-block;
@@ -626,17 +700,25 @@ input:focus, select:focus, textarea:focus {
     </div>
   </div>
   
+  <!-- Описание мастера -->
+  <div class="master-bio">
+    <h3>ЛЁНЯ / MR. CHAO</h3>
+    <p>Привет 👋 Меня зовут Лёня, я занимаюсь татуировкой 5 лет. 💉<br>
+    В основном работаю в стиле графика. Города Хабаровск-Владивосток.<br>
+    Бью татуировки как по вашим идеям, так и по своим эскизам. <strong>Разработка эскиза бесплатная.</strong><br>
+    Работаю по предварительной записи, с внесением депозита.</p>
+  </div>
+  
   <!-- Навигация -->
   <div class="nav">
     <button class="nav-btn active" data-panel="booking">ЗАПИСЬ</button>
     <button class="nav-btn" data-panel="portfolio">ПОРТФОЛИО</button>
-    <button class="nav-btn" data-panel="admin" id="adminNavBtn" style="display:none">АДМИН</button>
+    <button class="nav-btn" id="adminNavBtn" style="display:none" data-panel="admin">АДМИН</button>
   </div>
   
   <!-- Панель ЗАПИСЬ -->
   <div class="panel active" id="panelBooking">
     <div class="booking-card">
-      <!-- Шаги -->
       <div class="steps">
         <div class="step active" data-step="1"><div class="step-num">01</div><div class="step-label">УСЛУГА</div></div>
         <div class="step" data-step="2"><div class="step-num">02</div><div class="step-label">ДАТА</div></div>
@@ -650,7 +732,7 @@ input:focus, select:focus, textarea:focus {
           <label>ВЫБЕРИТЕ УСЛУГУ</label>
           <div class="services-grid" id="servicesGrid"></div>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="sizesGroup">
           <label>РАЗМЕР РАБОТЫ</label>
           <div class="sizes" id="sizesGrid"></div>
         </div>
@@ -692,8 +774,16 @@ input:focus, select:focus, textarea:focus {
           </select>
         </div>
         <div class="form-group">
-          <label>ИДЕЯ / РЕФЕРЕНС</label>
+          <label>ИДЕЯ / ОПИСАНИЕ</label>
           <textarea id="clientIdea" rows="3" placeholder="Опишите вашу идею..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>ССЫЛКИ НА РЕФЕРЕНСЫ (ФОТО / ПРИМЕРЫ)</label>
+          <div class="ref-link-group">
+            <input type="text" id="refInput" placeholder="https://...">
+            <button type="button" class="ref-add-btn" onclick="addReference()">+ ДОБАВИТЬ</button>
+          </div>
+          <div class="ref-list" id="refList"></div>
         </div>
         <div class="error" id="step3Error" style="color:#666; font-size:12px; margin-bottom:16px; display:none"></div>
         <button class="btn" onclick="nextStep()">ДАЛЕЕ →</button>
@@ -742,6 +832,7 @@ input:focus, select:focus, textarea:focus {
 // ==================== КОНФИГУРАЦИЯ ====================
 const BOT_TOKEN = '8209263425:AAFZQzJCzLmnV044UPaCWJWJZ3ZQw24H85k';
 const CHAT_ID = '1085941747';
+const ADMIN_PASSWORD = 'chao123';
 
 // ==================== ГЛОБАЛЬНЫЕ ДАННЫЕ ====================
 let currentStep = 1;
@@ -750,20 +841,36 @@ let selectedSize = null;
 let selectedDate = null;
 let selectedTime = null;
 let currentMonth = new Date();
-let busyDates = [];
+let references = [];
+let tgUser = null;
+let tgUserInfo = '';
+
+// Данные о занятых слотах (синхронизируются между всеми записями)
+let bookedSlots = {};
+
+// Загрузка занятых слотов из localStorage
+function loadBookedSlots() {
+  const saved = localStorage.getItem('tattoo_booked_slots');
+  if (saved) {
+    bookedSlots = JSON.parse(saved);
+  } else {
+    bookedSlots = {};
+  }
+}
+
+function saveBookedSlots() {
+  localStorage.setItem('tattoo_booked_slots', JSON.stringify(bookedSlots));
+}
+
+// Портфолио
 let portfolio = [];
 
-// Загружаем портфолио из localStorage
 function loadPortfolio() {
   const saved = localStorage.getItem('tattoo_portfolio');
   if (saved) {
     portfolio = JSON.parse(saved);
   } else {
-    portfolio = [
-      { id: 1, title: 'Дракон на спине', image: 'https://placehold.co/400x300/1a1a1a/666?text=DRAGON', desc: 'Японский стиль, 15 часов работы' },
-      { id: 2, title: 'Череп в пламени', image: 'https://placehold.co/400x300/1a1a1a/666?text=SKULL', desc: 'Брутальный реализм' },
-      { id: 3, title: 'Лев на груди', image: 'https://placehold.co/400x300/1a1a1a/666?text=LION', desc: 'Реализм, черно-серый' }
-    ];
+    portfolio = [];
   }
   renderPortfolio();
   renderAdminPortfolio();
@@ -784,7 +891,7 @@ function renderPortfolio() {
   }
   grid.innerHTML = portfolio.map(item => `
     <div class="portfolio-item">
-      <img class="portfolio-img" src="${item.image}" alt="${item.title}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=NO+IMAGE'">
+      <img class="portfolio-img" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=NO+IMAGE'">
       <div class="portfolio-info">
         <div class="portfolio-title">${escapeHtml(item.title)}</div>
         <div class="portfolio-desc">${escapeHtml(item.desc)}</div>
@@ -838,7 +945,7 @@ function deletePortfolioItem(id) {
   showNotification('Работа удалена');
 }
 
-// Превью изображения
+// Превью изображения в админке
 document.getElementById('adminImageUrl')?.addEventListener('input', (e) => {
   const preview = document.getElementById('adminPreview');
   if (e.target.value) {
@@ -849,7 +956,6 @@ document.getElementById('adminImageUrl')?.addEventListener('input', (e) => {
 });
 
 // ==================== ТЕЛЕГРАМ ПОЛЬЗОВАТЕЛЬ ====================
-let tgUser = null;
 try {
   const webApp = window.Telegram?.WebApp;
   if (webApp) {
@@ -857,20 +963,22 @@ try {
     webApp.expand();
     tgUser = webApp.initDataUnsafe?.user;
     if (tgUser) {
-      const username = tgUser.username ? `@${tgUser.username}` : `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim();
-      document.getElementById('tgUsername').innerHTML = username || 'Гость';
-      document.getElementById('clientName').value = tgUser.first_name ? `${tgUser.first_name} ${tgUser.last_name || ''}`.trim() : '';
+      const username = tgUser.username ? `@${tgUser.username}` : '';
+      const fullName = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim();
+      tgUserInfo = username || fullName || 'Гость';
+      document.getElementById('tgUsername').innerHTML = tgUserInfo;
+      document.getElementById('clientName').value = fullName;
     } else {
       document.getElementById('tgUsername').innerHTML = 'Гость';
+      tgUserInfo = 'Гость';
     }
   }
 } catch(e) {
   document.getElementById('tgUsername').innerHTML = 'Гость';
+  tgUserInfo = 'Гость';
 }
 
 // ==================== АДМИН ПРОВЕРКА ====================
-// Простая проверка — можно установить свой пароль
-const ADMIN_PASSWORD = 'chao123';
 function checkAdmin() {
   const pwd = prompt('Введите пароль администратора:');
   if (pwd === ADMIN_PASSWORD) {
@@ -881,9 +989,11 @@ function checkAdmin() {
     showNotification('Неверный пароль');
   }
 }
+
 if (localStorage.getItem('isAdmin') === 'true') {
   document.getElementById('adminNavBtn').style.display = 'block';
 }
+
 document.getElementById('adminNavBtn')?.addEventListener('click', () => {
   if (localStorage.getItem('isAdmin') !== 'true') {
     checkAdmin();
@@ -914,6 +1024,15 @@ function selectService(index) {
   selectedService = services[index];
   document.querySelectorAll('.service-card').forEach(card => card.classList.remove('selected'));
   document.querySelector(`.service-card[data-service-index="${index}"]`).classList.add('selected');
+  
+  // Если выбрана консультация — скрываем выбор размера
+  const sizesGroup = document.getElementById('sizesGroup');
+  if (selectedService.name === 'Консультация') {
+    sizesGroup.style.display = 'none';
+    selectedSize = null;
+  } else {
+    sizesGroup.style.display = 'block';
+  }
 }
 
 function renderSizes() {
@@ -957,12 +1076,19 @@ function renderCalendar() {
   
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
+    const dateKey = date.toISOString().split('T')[0];
     const isPast = date < today;
     const isToday = date.toDateString() === today.toDateString();
     const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
+    const isBooked = bookedSlots[dateKey] && Object.keys(bookedSlots[dateKey]).length >= 10; // все слоты заняты
+    
+    let additionalClass = '';
+    if (isPast) additionalClass = 'disabled';
+    else if (isBooked) additionalClass = 'booked';
+    
     calendarHtml += `
-      <div class="cal-day ${isPast ? 'disabled' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
-           onclick="${isPast ? '' : `selectDate(${year}, ${month}, ${d})`}">
+      <div class="cal-day ${additionalClass} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
+           onclick="${!isPast && !isBooked ? `selectDate(${year}, ${month}, ${d})` : ''}">
         ${d}
       </div>
     `;
@@ -989,7 +1115,6 @@ function nextMonth() {
 
 // ==================== ВРЕМЕННЫЕ СЛОТЫ ====================
 const allTimeSlots = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
-const bookedSlots = JSON.parse(localStorage.getItem('bookedSlots') || '{}');
 
 function renderTimeSlots() {
   if (!selectedDate) {
@@ -1000,7 +1125,7 @@ function renderTimeSlots() {
   const busy = bookedSlots[dateKey] || [];
   const slotsHtml = allTimeSlots.map(slot => `
     <div class="time-slot ${busy.includes(slot) ? 'disabled' : ''} ${selectedTime === slot ? 'selected' : ''}"
-         onclick="${busy.includes(slot) ? '' : `selectTime('${slot}')`}">
+         onclick="${!busy.includes(slot) ? `selectTime('${slot}')` : ''}">
       ${slot}
     </div>
   `).join('');
@@ -1010,6 +1135,36 @@ function renderTimeSlots() {
 function selectTime(slot) {
   selectedTime = slot;
   renderTimeSlots();
+}
+
+// ==================== РЕФЕРЕНСЫ ====================
+function addReference() {
+  const input = document.getElementById('refInput');
+  const url = input.value.trim();
+  if (url && !references.includes(url)) {
+    references.push(url);
+    renderReferences();
+    input.value = '';
+  }
+}
+
+function removeReference(index) {
+  references.splice(index, 1);
+  renderReferences();
+}
+
+function renderReferences() {
+  const container = document.getElementById('refList');
+  if (references.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = references.map((ref, i) => `
+    <div class="ref-item">
+      <a href="${escapeHtml(ref)}" target="_blank">${escapeHtml(ref.length > 40 ? ref.substring(0, 40) + '...' : ref)}</a>
+      <span class="ref-remove" onclick="removeReference(${i})">✕</span>
+    </div>
+  `).join('');
 }
 
 // ==================== НАВИГАЦИЯ ПО ШАГАМ ====================
@@ -1027,8 +1182,13 @@ function updateStepsUI() {
 }
 
 function nextStep() {
-  if (currentStep === 1 && (!selectedService || !selectedSize)) {
-    document.getElementById('step1Error').innerHTML = 'Выберите услугу и размер';
+  if (currentStep === 1 && (!selectedService)) {
+    document.getElementById('step1Error').innerHTML = 'Выберите услугу';
+    document.getElementById('step1Error').style.display = 'block';
+    return;
+  }
+  if (currentStep === 1 && selectedService.name !== 'Консультация' && !selectedSize) {
+    document.getElementById('step1Error').innerHTML = 'Выберите размер работы';
     document.getElementById('step1Error').style.display = 'block';
     return;
   }
@@ -1065,11 +1225,12 @@ function renderSummary() {
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   summary.innerHTML = `
     <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Услуга:</span><strong>${selectedService?.name || '—'}</strong></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Размер:</span><strong>${selectedSize || '—'}</strong></div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Размер:</span><strong>${selectedSize || (selectedService?.name === 'Консультация' ? '—' : 'Не выбран')}</strong></div>
     <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Дата:</span><strong>${dateStr}</strong></div>
     <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Время:</span><strong>${selectedTime || '—'}</strong></div>
     <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Место:</span><strong>${document.getElementById('clientPlace').value || '—'}</strong></div>
     <div style="display:flex; justify-content:space-between"><span>Стоимость:</span><strong>${selectedService?.price || '—'}</strong></div>
+    ${references.length > 0 ? `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px"><span>Референсы:</span><div style="margin-top:8px">${references.map(ref => `<a href="${ref}" target="_blank" style="color:var(--text-muted); display:block; font-size:11px">${ref}</a>`).join('')}</div></div>` : ''}
   `;
 }
 
@@ -1086,26 +1247,28 @@ async function submitBooking() {
   // Сохраняем занятый слот
   const dateKey = selectedDate.toISOString().split('T')[0];
   if (!bookedSlots[dateKey]) bookedSlots[dateKey] = [];
-  bookedSlots[dateKey].push(selectedTime);
-  localStorage.setItem('bookedSlots', JSON.stringify(bookedSlots));
+  if (!bookedSlots[dateKey].includes(selectedTime)) {
+    bookedSlots[dateKey].push(selectedTime);
+    saveBookedSlots();
+  }
   
-  const tgUsername = tgUser?.username ? `@${tgUser.username}` : (tgUser?.first_name || 'Не указан');
+  const refsText = references.length > 0 ? `\n\n📎 *Референсы:*\n${references.join('\n')}` : '';
   
   const message = `🖤 *НОВАЯ ЗАЯВКА НА ТАТУ* 🖤
   
 📋 *Услуга:* ${selectedService?.name}
-📐 *Размер:* ${selectedSize}
+📐 *Размер:* ${selectedSize || (selectedService?.name === 'Консультация' ? 'Не требуется' : '—')}
 💰 *Стоимость:* ${selectedService?.price}
 
 📅 *Дата:* ${dateStr}
 ⏰ *Время:* ${selectedTime}
-📍 *Место нанесения:* ${place}
+📍 *Место нанесения:* ${place || 'Не указано'}
 
 👤 *Клиент:* ${name}
 📞 *Телефон:* ${phone}
-✈️ *Telegram:* ${tgUsername}
+✈️ *Telegram:* ${tgUserInfo}
 
-💬 *Идея:* ${idea || 'Не указано'}`;
+💬 *Идея:* ${idea || 'Не указано'}${refsText}`;
   
   const btn = event.target;
   btn.disabled = true;
@@ -1131,15 +1294,19 @@ function resetForm() {
   selectedSize = null;
   selectedDate = null;
   selectedTime = null;
+  references = [];
   currentStep = 1;
   document.getElementById('clientName').value = tgUser?.first_name ? `${tgUser.first_name} ${tgUser.last_name || ''}`.trim() : '';
   document.getElementById('clientPhone').value = '';
   document.getElementById('clientPlace').value = '';
   document.getElementById('clientIdea').value = '';
+  document.getElementById('refInput').value = '';
+  renderReferences();
   renderServices();
   renderSizes();
   renderCalendar();
   updateStepsUI();
+  document.getElementById('sizesGroup').style.display = 'block';
 }
 
 // ==================== УВЕДОМЛЕНИЯ ====================
@@ -1175,10 +1342,11 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+loadBookedSlots();
+loadPortfolio();
 renderServices();
 renderSizes();
 renderCalendar();
-loadPortfolio();
 </script>
 </body>
 </html>
