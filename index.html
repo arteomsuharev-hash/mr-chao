@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Запись к тату-мастеру | Mr. Chao</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖤 Mr. Chao</h1>
+            <p class="subtitle">Запись на татуировку</p>
+        </div>
+        
+        <div id="notification" class="notification"></div>
+        
+        <form id="bookingForm" class="booking-form">
+            <div class="form-group">
+                <label for="name">
+                    <span class="label-icon">👤</span>
+                    Ваше имя
+                </label>
+                <input type="text" id="name" name="name" placeholder="Как к вам обращаться?" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">
+                    <span class="label-icon">📞</span>
+                    Телефон для связи
+                </label>
+                <input type="tel" id="phone" name="phone" placeholder="+7 999 123-45-67" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="service">
+                    <span class="label-icon">🎨</span>
+                    Выберите услугу
+                </label>
+                <select id="service" name="service" required>
+                    <option value="">Выберите...</option>
+                    <option value="Тату (маленькая, до 10 см)">🐉 Тату (маленькая, до 10 см) - 5000₽</option>
+                    <option value="Тату (средняя, 10-20 см)">🐲 Тату (средняя, 10-20 см) - 10000₽</option>
+                    <option value="Тату (большая, от 20 см)">🔥 Тату (большая, от 20 см) - 15000₽</option>
+                    <option value="Консультация">💬 Консультация - Бесплатно</option>
+                    <option value="Перекрытие старой татуировки">🎭 Перекрытие старой татуировки - от 10000₽</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">
+                    <span class="label-icon">📅</span>
+                    Выберите дату
+                </label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <span class="label-icon">⏰</span>
+                    Свободное время
+                </label>
+                <div id="timeSlots" class="time-slots">
+                    <div class="loading-spinner">⏳ Сначала выберите дату</div>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span class="btn-text">📅 Записаться</span>
+                <span class="btn-loading" style="display: none;">Отправка...</span>
+            </button>
+        </form>
+        
+        <div class="footer">
+            <p>После записи мастер свяжется с вами для подтверждения</p>
+            <p class="small">⏱️ Сеансы длительностью 2-4 часа</p>
+        </div>
+    </div>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+    <script src="script.js"></script>
+</body>
+</html>
