@@ -3,80 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Запись к тату-мастеру | Mr. Chao</title>
+    <title>MR. CHAO | TATTOO RECORD</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Брутальный фон -->
+    <div class="dark-bg">
+        <div class="noise"></div>
+        <div class="overlay-gradient"></div>
+    </div>
+
     <div class="container">
-        <div class="header">
-            <h1>🖤 Mr. Chao</h1>
-            <p class="subtitle">Запись на татуировку</p>
-        </div>
-        
-        <div id="notification" class="notification"></div>
-        
-        <form id="bookingForm" class="booking-form">
-            <div class="form-group">
-                <label for="name">
-                    <span class="label-icon">👤</span>
-                    Ваше имя
-                </label>
-                <input type="text" id="name" placeholder="Как к вам обращаться?" required>
+        <!-- Хедер с логотипом -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">⛓️</span>
+                <span class="logo-text">MR. CHAO</span>
+                <span class="logo-line"></span>
             </div>
-            
-            <div class="form-group">
-                <label for="phone">
-                    <span class="label-icon">📞</span>
-                    Телефон для связи
-                </label>
-                <input type="tel" id="phone" placeholder="+7 999 123-45-67" required>
+            <div class="tagline">CUSTOM TATTOO STUDIO</div>
+        </header>
+
+        <!-- Главный блок -->
+        <main class="main">
+            <!-- Приветственный блок -->
+            <div class="hero">
+                <h1 class="hero-title">
+                    <span class="title-brutal">BRUTAL</span>
+                    <span class="title-style">STYLE</span>
+                </h1>
+                <p class="hero-desc">Индивидуальный дизайн. Качественные материалы. <br>Работы, которые говорят сами за себя.</p>
             </div>
-            
-            <div class="form-group">
-                <label for="service">
-                    <span class="label-icon">🎨</span>
-                    Выберите услугу
-                </label>
-                <select id="service" required>
-                    <option value="">Выберите...</option>
-                    <option value="Тату (маленькая, до 10 см)">🐉 Тату (маленькая, до 10 см) - 5000₽</option>
-                    <option value="Тату (средняя, 10-20 см)">🐲 Тату (средняя, 10-20 см) - 10000₽</option>
-                    <option value="Тату (большая, от 20 см)">🔥 Тату (большая, от 20 см) - 15000₽</option>
-                    <option value="Консультация">💬 Консультация - Бесплатно</option>
-                    <option value="Перекрытие старой татуировки">🎭 Перекрытие старой татуировки - от 10000₽</option>
-                </select>
+
+            <!-- Карточка записи -->
+            <div class="booking-card">
+                <div class="card-header">
+                    <div class="card-badge">✧ ЗАПИСЬ ОНЛАЙН ✧</div>
+                    <h2>ЗАПОЛНИ ФОРМУ</h2>
+                    <p>Я свяжусь с тобой в течение 24 часов</p>
+                </div>
+
+                <div id="notification"></div>
+
+                <form id="bookingForm">
+                    <!-- Имя -->
+                    <div class="input-field">
+                        <input type="text" id="name" placeholder="ТВОЁ ИМЯ" required>
+                        <span class="field-border"></span>
+                    </div>
+
+                    <!-- Телефон -->
+                    <div class="input-field">
+                        <input type="tel" id="phone" placeholder="ТЕЛЕФОН ДЛЯ СВЯЗИ" required>
+                        <span class="field-border"></span>
+                    </div>
+
+                    <!-- Услуга -->
+                    <div class="select-field">
+                        <select id="service" required>
+                            <option value="" disabled selected>ВЫБЕРИ УСЛУГУ</option>
+                            <option value="Тату (маленькая)">ТАТУ МАЛЕНЬКАЯ (до 10 см) — 5 000₽</option>
+                            <option value="Тату (средняя)">ТАТУ СРЕДНЯЯ (10-20 см) — 10 000₽</option>
+                            <option value="Тату (большая)">ТАТУ БОЛЬШАЯ (от 20 см) — 15 000₽</option>
+                            <option value="Перекрытие">ПЕРЕКРЫТИЕ СТАРОЙ ТАТУ — от 10 000₽</option>
+                            <option value="Консультация">КОНСУЛЬТАЦИЯ — БЕСПЛАТНО</option>
+                        </select>
+                        <span class="field-border"></span>
+                    </div>
+
+                    <!-- Дата и время -->
+                    <div class="row-2">
+                        <div class="input-field">
+                            <input type="date" id="date" required>
+                            <span class="field-border"></span>
+                        </div>
+                        <div class="input-field">
+                            <div id="timeSlots" class="time-slots-container">
+                                <div class="time-placeholder">ВЫБЕРИ ДАТУ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопка -->
+                    <button type="submit" class="brutal-btn" id="submitBtn">
+                        <span class="btn-text">ОТПРАВИТЬ ЗАЯВКУ</span>
+                        <span class="btn-loading" style="display: none;">ОТПРАВКА...</span>
+                        <span class="btn-arrow">→</span>
+                    </button>
+
+                    <p class="form-note">Нажимая на кнопку, ты соглашаешься с условиями обработки данных</p>
+                </form>
             </div>
-            
-            <div class="form-group">
-                <label for="date">
-                    <span class="label-icon">📅</span>
-                    Выберите дату
-                </label>
-                <input type="date" id="date" required>
-            </div>
-            
-            <div class="form-group">
-                <label>
-                    <span class="label-icon">⏰</span>
-                    Свободное время
-                </label>
-                <div id="timeSlots" class="time-slots">
-                    <div class="loading-spinner">📅 Сначала выберите дату</div>
+
+            <!-- Преимущества -->
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">⚔️</div>
+                    <h3>СТЕРИЛЬНО</h3>
+                    <p>Одноразовые иглы<br>и расходники</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <h3>ИНДИВИДУАЛЬНО</h3>
+                    <p>Уникальный дизайн<br>под твой запрос</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💀</div>
+                    <h3>НАДЁЖНО</h3>
+                    <p>Более 7 лет опыта<br>500+ работ</p>
                 </div>
             </div>
-            
-            <button type="submit" class="submit-btn" id="submitBtn">
-                <span class="btn-text">📅 Записаться</span>
-                <span class="btn-loading" style="display: none;">Отправка...</span>
-            </button>
-        </form>
-        
-        <div class="footer">
-            <p>После записи мастер свяжется с вами для подтверждения</p>
-            <p class="small">⏱️ Сеансы длительностью 2-4 часа</p>
-        </div>
+
+            <!-- Контакты -->
+            <footer class="footer">
+                <div class="social">
+                    <a href="#" class="social-link">INSTAGRAM</a>
+                    <a href="#" class="social-link">TELEGRAM</a>
+                    <a href="#" class="social-link">WHATSAPP</a>
+                </div>
+                <div class="copyright">© MR. CHAO TATTOO — 2024</div>
+            </footer>
+        </main>
     </div>
-    
+
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     <script src="script.js"></script>
 </body>
