@@ -414,26 +414,40 @@ function addBooking(booking) {
 
 async function cancelBooking(bookingId, source = 'admin') {
   const booking = allBookings.find(b => b.id === bookingId);
-  if (booking && booking.status !== 'cancelled') {
-    booking.status = 'cancelled';
-    if (booking.date && booking.time) {
-      releaseSlot(new Date(booking.date), booking.time);
-      renderCalendar();
-      renderTimeSlots();
-    }
-    saveAllBookings();
-    showNotification('Запись отменена, слот освобождён');
-    
-    if (booking.tgUserId) {
-      const cancelMessage = source === 'admin' 
-        ? '❌ Ваша запись была ОТМЕНЕНА администратором. Слот освобождён. Вы можете записаться на другое время.'
-        : '❌ Вы успешно отменили запись. Слот освобождён.';
+  if (!booking) {
+    showNotification('❌ Запись не найдена');
+    return;
+  }
+  if (booking.status === 'cancelled') {
+    showNotification('❌ Эта запись уже отменена');
+    return;
+  }
+  
+  // Обновляем статус
+  booking.status = 'cancelled';
+  
+  // Освобождаем слот
+  if (booking.date && booking.time) {
+    releaseSlot(new Date(booking.date), booking.time);
+    renderCalendar();
+    renderTimeSlots();
+  }
+  
+  saveAllBookings();
+  showNotification('✅ Запись отменена, слот освобождён');
+  
+  // Отправляем уведомление клиенту
+  if (booking.tgUserId) {
+    const cancelMessage = source === 'admin' 
+      ? '❌ Ваша запись была ОТМЕНЕНА администратором. Слот освобождён. Вы можете записаться на другое время.'
+      : '❌ Вы успешно отменили запись. Слот освобождён.';
+    try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: booking.tgUserId, text: cancelMessage })
       });
-    }
+    } catch(e) { console.error('Ошибка отправки уведомления клиенту:', e); }
   }
 }
 
@@ -470,10 +484,13 @@ function renderBookingsHistory() {
   `;
 }
 
+// Синхронизация между вкладками
 window.addEventListener('storage', (e) => {
-  if (e.key === 'tattoo_all_bookings' || e.key === 'tattoo_booked_slots') {
-    loadBookedSlots();
+  if (e.key === 'tattoo_all_bookings') {
     loadAllBookings();
+  }
+  if (e.key === 'tattoo_booked_slots') {
+    loadBookedSlots();
     renderCalendar();
     renderTimeSlots();
   }
@@ -790,7 +807,8 @@ async function submitBooking() {
     tgUser: tgUserInfo,
     tgUserId: tgUserId,
     status: 'new',
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    reminderSent: false
   };
   addBooking(newBooking);
   
@@ -814,7 +832,7 @@ async function submitBooking() {
     
     const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${dateStr}\n⏰ ${selectedTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selectedService?.name}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\n⚠️ ВНИМАНИЕ: Слот забронирован. Если нужно отменить запись, нажмите кнопку ниже.`;
     const keyboard = {
-      inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: `cancel_${newBooking.id}` }]]
+      inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: JSON.stringify({ action: 'cancel', bookingId: newBooking.id }) }]]
     };
     if (tgUserId) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -860,13 +878,20 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
+// Глобальная функция для отмены через бота
 window.cancelBooking = cancelBooking;
+
+// Обработка callback от бота (для inline кнопок)
+if (window.Telegram?.WebApp) {
+  window.Telegram.WebApp.onEvent('mainButtonClicked', () => {});
+}
 
 // ==================== НАПОМИНАНИЯ ====================
 function checkReminders() {
   const now = new Date();
   allBookings.forEach(booking => {
     if (booking.status === 'cancelled') return;
+    if (!booking.date) return;
     const bookingDate = new Date(booking.date);
     const diffDays = Math.ceil((bookingDate - now) / (1000 * 60 * 60 * 24));
     if (diffDays === 1 && !booking.reminderSent) {
