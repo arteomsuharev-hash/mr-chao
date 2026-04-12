@@ -39,7 +39,6 @@ body {
     }
 }
 
-/* Header */
 .header {
     text-align: center;
     margin-bottom: 32px;
@@ -60,7 +59,6 @@ h1 {
     font-size: 14px;
 }
 
-/* Notification */
 .notification {
     margin-bottom: 20px;
     animation: slideIn 0.3s ease-out;
@@ -95,7 +93,6 @@ h1 {
     font-size: 14px;
 }
 
-/* Form */
 .booking-form {
     background: var(--tg-theme-secondary-bg-color, #f8f9fa);
     border-radius: var(--border-radius);
@@ -139,7 +136,6 @@ input:focus, select:focus {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Time Slots */
 .time-slots {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
@@ -173,17 +169,6 @@ input:focus, select:focus {
     transform: scale(1.02);
 }
 
-.time-slot.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    text-decoration: line-through;
-}
-
-.time-slot.disabled:hover {
-    transform: none;
-    border-color: var(--tg-theme-hint-color, #e0e0e0);
-}
-
 .loading-spinner {
     text-align: center;
     padding: 20px;
@@ -191,7 +176,6 @@ input:focus, select:focus {
     font-size: 14px;
 }
 
-/* Submit Button */
 .submit-btn {
     width: 100%;
     padding: 16px;
@@ -203,8 +187,6 @@ input:focus, select:focus {
     font-weight: bold;
     cursor: pointer;
     transition: var(--transition);
-    position: relative;
-    overflow: hidden;
     margin-top: 8px;
 }
 
@@ -227,7 +209,6 @@ input:focus, select:focus {
     display: inline-block;
 }
 
-/* Footer */
 .footer {
     text-align: center;
     margin-top: 24px;
@@ -246,7 +227,6 @@ input:focus, select:focus {
     opacity: 0.7;
 }
 
-/* Responsive */
 @media (max-width: 480px) {
     body {
         padding: 16px;
@@ -269,20 +249,4 @@ input:focus, select:focus {
     h1 {
         font-size: 28px;
     }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    input, select {
-        background: var(--tg-theme-bg-color, #1a1a1a);
-    }
-}
-
-/* Telegram specific */
-.tgme_widget_message_bubble {
-    background: var(--tg-theme-bg-color, #ffffff);
 }
