@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-<title>MR. CHAO TATTOO | BRUTAL STUDIO</title>
+<title>MR. CHAO TATTOO | STUDIO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -26,8 +26,6 @@
   --text-muted: #666666;
   --accent: #333333;
   --accent-hover: #444444;
-  --gradient-1: linear-gradient(135deg, #1a1a1a, #0a0a0a);
-  --gradient-2: linear-gradient(135deg, #2a2a2a, #111111);
   --shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
@@ -56,6 +54,11 @@ body {
   margin-bottom: 30px;
 }
 
+.logo {
+  cursor: pointer;
+  user-select: none;
+}
+
 .logo h1 {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 42px;
@@ -75,7 +78,6 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   padding: 8px 16px;
-  border-radius: 0;
   font-size: 13px;
 }
 
@@ -184,6 +186,7 @@ body {
   height: 280px;
   object-fit: cover;
   background: var(--bg-elevated);
+  display: block;
 }
 
 .portfolio-info {
@@ -565,6 +568,24 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 30px;
 }
 
+.image-upload-label {
+  display: inline-block;
+  background: var(--gray);
+  padding: 12px 20px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.image-upload-label:hover {
+  background: var(--gray-light);
+}
+
+.image-upload-input {
+  display: none;
+}
+
 .admin-preview {
   max-width: 200px;
   margin-top: 10px;
@@ -573,6 +594,7 @@ input:focus, select:focus, textarea:focus {
 .admin-preview img {
   width: 100%;
   height: auto;
+  border: 1px solid var(--border);
 }
 
 .portfolio-list {
@@ -691,9 +713,9 @@ input:focus, select:focus, textarea:focus {
   
   <!-- Хедер -->
   <div class="header">
-    <div class="logo">
+    <div class="logo" id="logo">
       <h1>MR. CHAO</h1>
-      <p>BRUTAL TATTOO STUDIO</p>
+      <p>TATTOO STUDIO</p>
     </div>
     <div class="user-info" id="userInfo">
       <span>Клиент:</span> <strong id="tgUsername">Загрузка...</strong>
@@ -814,7 +836,10 @@ input:focus, select:focus, textarea:focus {
       <div class="admin-title">ДОБАВИТЬ РАБОТУ</div>
       <div class="admin-form">
         <input type="text" id="adminTitle" placeholder="Название работы">
-        <input type="text" id="adminImageUrl" placeholder="URL изображения">
+        <label class="image-upload-label">
+          ВЫБРАТЬ ФОТО
+          <input type="file" id="adminImageFile" class="image-upload-input" accept="image/*" capture="environment">
+        </label>
         <textarea id="adminDesc" rows="2" placeholder="Описание"></textarea>
         <div class="admin-preview" id="adminPreview"></div>
         <button class="btn" onclick="addPortfolioItem()">ДОБАВИТЬ</button>
@@ -832,7 +857,9 @@ input:focus, select:focus, textarea:focus {
 // ==================== КОНФИГУРАЦИЯ ====================
 const BOT_TOKEN = '8209263425:AAFZQzJCzLmnV044UPaCWJWJZ3ZQw24H85k';
 const CHAT_ID = '1085941747';
-const ADMIN_PASSWORD = 'chao123';
+const ADMIN_CLICK_COUNT = 15;
+let clickCount = 0;
+let clickTimer = null;
 
 // ==================== ГЛОБАЛЬНЫЕ ДАННЫЕ ====================
 let currentStep = 1;
@@ -845,10 +872,10 @@ let references = [];
 let tgUser = null;
 let tgUserInfo = '';
 
-// Данные о занятых слотах (синхронизируются между всеми записями)
+// Данные о занятых слотах
 let bookedSlots = {};
 
-// Загрузка занятых слотов из localStorage
+// Загрузка занятых слотов
 function loadBookedSlots() {
   const saved = localStorage.getItem('tattoo_booked_slots');
   if (saved) {
@@ -891,7 +918,7 @@ function renderPortfolio() {
   }
   grid.innerHTML = portfolio.map(item => `
     <div class="portfolio-item">
-      <img class="portfolio-img" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=NO+IMAGE'">
+      <img class="portfolio-img" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=ERROR'">
       <div class="portfolio-info">
         <div class="portfolio-title">${escapeHtml(item.title)}</div>
         <div class="portfolio-desc">${escapeHtml(item.desc)}</div>
@@ -920,23 +947,40 @@ function renderAdminPortfolio() {
 
 function addPortfolioItem() {
   const title = document.getElementById('adminTitle').value.trim();
-  const image = document.getElementById('adminImageUrl').value.trim();
   const desc = document.getElementById('adminDesc').value.trim();
+  const imageInput = document.getElementById('adminImageFile');
   
-  if (!title || !image) {
-    showNotification('Заполните название и URL изображения');
+  if (!title) {
+    showNotification('Введите название работы');
     return;
   }
   
-  const newId = Date.now();
-  portfolio.unshift({ id: newId, title, image, desc });
-  savePortfolio();
+  if (!imageInput.files || imageInput.files.length === 0) {
+    showNotification('Выберите фото');
+    return;
+  }
   
-  document.getElementById('adminTitle').value = '';
-  document.getElementById('adminImageUrl').value = '';
-  document.getElementById('adminDesc').value = '';
-  document.getElementById('adminPreview').innerHTML = '';
-  showNotification('Работа добавлена!');
+  const file = imageInput.files[0];
+  const reader = new FileReader();
+  
+  reader.onload = function(e) {
+    const imageData = e.target.result;
+    const newId = Date.now();
+    portfolio.unshift({ id: newId, title, image: imageData, desc });
+    savePortfolio();
+    
+    document.getElementById('adminTitle').value = '';
+    document.getElementById('adminDesc').value = '';
+    document.getElementById('adminImageFile').value = '';
+    document.getElementById('adminPreview').innerHTML = '';
+    showNotification('Работа добавлена!');
+  };
+  
+  reader.onerror = function() {
+    showNotification('Ошибка чтения файла');
+  };
+  
+  reader.readAsDataURL(file);
 }
 
 function deletePortfolioItem(id) {
@@ -946,12 +990,31 @@ function deletePortfolioItem(id) {
 }
 
 // Превью изображения в админке
-document.getElementById('adminImageUrl')?.addEventListener('input', (e) => {
+document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
   const preview = document.getElementById('adminPreview');
-  if (e.target.value) {
-    preview.innerHTML = `<img src="${e.target.value}" style="max-width:100%; border:1px solid var(--border)" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=ERROR'">`;
+  if (e.target.files && e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--border)">`;
+    };
+    reader.readAsDataURL(e.target.files[0]);
   } else {
     preview.innerHTML = '';
+  }
+});
+
+// ==================== ВЫЗОВ АДМИНКИ (15 НАЖАТИЙ) ====================
+const logoElement = document.getElementById('logo');
+logoElement.addEventListener('click', () => {
+  clickCount++;
+  if (clickTimer) clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+  if (clickCount >= ADMIN_CLICK_COUNT) {
+    clickCount = 0;
+    localStorage.setItem('isAdmin', 'true');
+    document.getElementById('adminNavBtn').style.display = 'block';
+    showNotification('Админ-панель активирована!');
+    if (clickTimer) clearTimeout(clickTimer);
   }
 });
 
@@ -978,27 +1041,10 @@ try {
   tgUserInfo = 'Гость';
 }
 
-// ==================== АДМИН ПРОВЕРКА ====================
-function checkAdmin() {
-  const pwd = prompt('Введите пароль администратора:');
-  if (pwd === ADMIN_PASSWORD) {
-    localStorage.setItem('isAdmin', 'true');
-    document.getElementById('adminNavBtn').style.display = 'block';
-    showNotification('Добро пожаловать в админ-панель!');
-  } else {
-    showNotification('Неверный пароль');
-  }
-}
-
+// Показываем админ-кнопку, если уже была активирована
 if (localStorage.getItem('isAdmin') === 'true') {
   document.getElementById('adminNavBtn').style.display = 'block';
 }
-
-document.getElementById('adminNavBtn')?.addEventListener('click', () => {
-  if (localStorage.getItem('isAdmin') !== 'true') {
-    checkAdmin();
-  }
-});
 
 // ==================== УСЛУГИ И РАЗМЕРЫ ====================
 const services = [
@@ -1025,7 +1071,6 @@ function selectService(index) {
   document.querySelectorAll('.service-card').forEach(card => card.classList.remove('selected'));
   document.querySelector(`.service-card[data-service-index="${index}"]`).classList.add('selected');
   
-  // Если выбрана консультация — скрываем выбор размера
   const sizesGroup = document.getElementById('sizesGroup');
   if (selectedService.name === 'Консультация') {
     sizesGroup.style.display = 'none';
@@ -1080,7 +1125,7 @@ function renderCalendar() {
     const isPast = date < today;
     const isToday = date.toDateString() === today.toDateString();
     const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
-    const isBooked = bookedSlots[dateKey] && Object.keys(bookedSlots[dateKey]).length >= 10; // все слоты заняты
+    const isBooked = bookedSlots[dateKey] && Object.keys(bookedSlots[dateKey]).length >= 10;
     
     let additionalClass = '';
     if (isPast) additionalClass = 'disabled';
@@ -1244,7 +1289,6 @@ async function submitBooking() {
   const mo = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   
-  // Сохраняем занятый слот
   const dateKey = selectedDate.toISOString().split('T')[0];
   if (!bookedSlots[dateKey]) bookedSlots[dateKey] = [];
   if (!bookedSlots[dateKey].includes(selectedTime)) {
