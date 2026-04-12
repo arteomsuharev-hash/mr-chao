@@ -5,58 +5,67 @@ tg.ready();
 
 // Глобальные переменные
 let selectedTime = null;
-let currentDate = null;
+let bookings = [];
 
 // DOM элементы
 const form = document.getElementById('bookingForm');
+const nameInput = document.getElementById('name');
+const phoneInput = document.getElementById('phone');
+const serviceSelect = document.getElementById('service');
 const dateInput = document.getElementById('date');
 const timeSlotsDiv = document.getElementById('timeSlots');
 const submitBtn = document.getElementById('submitBtn');
 const notificationDiv = document.getElementById('notification');
 
-// Установка минимальной даты (сегодня + 1 день)
+// Установка минимальной даты (завтра)
 const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
 dateInput.min = tomorrow.toISOString().split('T')[0];
 
-// Обработчик изменения даты
-dateInput.addEventListener('change', async (e) => {
-    currentDate = e.target.value;
-    if (currentDate) {
-        await loadAvailableSlots(currentDate);
-    }
-});
-
-// Загрузка свободных слотов
-async function loadAvailableSlots(date) {
-    try {
-        timeSlotsDiv.innerHTML = '<div class="loading-spinner">⏳ Загрузка свободного времени...</div>';
-        
-        const response = await fetch(`/api/slots?date=${date}`);
-        
-        if (!response.ok) {
-            throw new Error('Ошибка загрузки');
+// Загрузка записей из Telegram Cloud Storage
+function loadBookings() {
+    tg.CloudStorage.getItem('bookings', (error, value) => {
+        if (!error && value) {
+            try {
+                bookings = JSON.parse(value);
+            } catch(e) {
+                bookings = [];
+            }
+        } else {
+            bookings = [];
         }
-        
-        const data = await response.json();
-        
-        if (!data.slots || data.slots.length === 0) {
-            timeSlotsDiv.innerHTML = '<div class="loading-spinner">😔 На эту дату нет свободного времени</div>';
-            return;
-        }
-        
-        // Отображаем слоты
-        displayTimeSlots(data.slots);
-        
-    } catch (error) {
-        console.error('Ошибка загрузки слотов:', error);
-        timeSlotsDiv.innerHTML = '<div class="loading-spinner">❌ Ошибка загрузки. Попробуйте позже</div>';
-        showNotification('Не удалось загрузить свободное время', 'error');
-    }
+    });
 }
 
-// Отображение временных слотов
-function displayTimeSlots(slots) {
+// Сохранение записей в Telegram Cloud Storage
+function saveBookingsToStorage() {
+    tg.CloudStorage.setItem('bookings', JSON.stringify(bookings));
+}
+
+// Получение свободных слотов
+function getAvailableSlots(date) {
+    const bookedTimes = bookings
+        .filter(b => b.date === date)
+        .map(b => b.time);
+    
+    const allSlots = [
+        '10:00', '11:00', '12:00', '13:00', 
+        '14:00', '15:00', '16:00', '17:00', 
+        '18:00', '19:00', '20:00'
+    ];
+    
+    return allSlots.filter(slot => !bookedTimes.includes(slot));
+}
+
+// Отображение свободных слотов
+function displayAvailableSlots(date) {
+    const slots = getAvailableSlots(date);
+    
+    if (slots.length === 0) {
+        timeSlotsDiv.innerHTML = '<div class="loading-spinner">😔 На эту дату нет свободного времени</div>';
+        return;
+    }
+    
     timeSlotsDiv.innerHTML = '';
     selectedTime = null;
     
@@ -71,123 +80,23 @@ function displayTimeSlots(slots) {
 
 // Выбор временного слота
 function selectTimeSlot(element, time) {
-    // Убираем выделение с предыдущего
     document.querySelectorAll('.time-slot').forEach(slot => {
         slot.classList.remove('selected');
     });
     
-    // Выделяем выбранный
     element.classList.add('selected');
     selectedTime = time;
     
-    // Вибрация на мобильных устройствах (опционально)
-    if (tg.platform !== 'unknown' && navigator.vibrate) {
-        navigator.vibrate(50);
-    }
+    // Вибрация на телефоне
+    if (navigator.vibrate) navigator.vibrate(50);
 }
 
-// Отправка формы
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Сбор данных
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const service = document.getElementById('service').value;
-    const date = dateInput.value;
-    
-    // Валидация
-    if (!name) {
-        showNotification('Пожалуйста, укажите ваше имя', 'error');
-        document.getElementById('name').focus();
-        return;
-    }
-    
-    if (!phone) {
-        showNotification('Пожалуйста, укажите телефон для связи', 'error');
-        document.getElementById('phone').focus();
-        return;
-    }
-    
-    if (!service) {
-        showNotification('Пожалуйста, выберите услугу', 'error');
-        document.getElementById('service').focus();
-        return;
-    }
-    
-    if (!date) {
-        showNotification('Пожалуйста, выберите дату', 'error');
-        dateInput.focus();
-        return;
-    }
-    
-    if (!selectedTime) {
-        showNotification('Пожалуйста, выберите удобное время', 'error');
-        return;
-    }
-    
-    // Валидация телефона (простая)
-    const phoneRegex = /^[\+\d\s\-\(\)]{10,}$/;
-    if (!phoneRegex.test(phone)) {
-        showNotification('Пожалуйста, укажите корректный номер телефона', 'error');
-        return;
-    }
-    
-    // Отправка данных
-    await submitBooking({ name, phone, service, date, time: selectedTime });
-});
-
-// Отправка записи на сервер
-async function submitBooking(bookingData) {
-    // Блокируем кнопку
-    setButtonLoading(true);
-    
-    try {
-        const response = await fetch('/api/book', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(bookingData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            // Успешная запись
-            showNotification('✅ Запись создана! Мастер свяжется с вами для подтверждения.', 'success');
-            
-            // Отправляем подтверждение в Telegram
-            tg.sendData(JSON.stringify({
-                success: true,
-                message: `Запись на ${bookingData.date} ${bookingData.time}`
-            }));
-            
-            // Очищаем форму
-            setTimeout(() => {
-                form.reset();
-                selectedTime = null;
-                timeSlotsDiv.innerHTML = '<div class="loading-spinner">📅 Выберите дату для просмотра свободного времени</div>';
-                tg.close(); // Закрываем мини-приложение через 2 секунды
-            }, 2000);
-            
-        } else {
-            // Ошибка при создании записи
-            showNotification(result.error || 'Ошибка при создании записи. Попробуйте еще раз.', 'error');
-            
-            // Если время занято, перезагружаем слоты
-            if (result.error && result.error.includes('занято')) {
-                await loadAvailableSlots(bookingData.date);
-            }
-            
-            setButtonLoading(false);
-        }
-        
-    } catch (error) {
-        console.error('Ошибка отправки:', error);
-        showNotification('❌ Ошибка соединения. Проверьте интернет и попробуйте снова.', 'error');
-        setButtonLoading(false);
-    }
+// Показ уведомления
+function showNotification(message, type) {
+    notificationDiv.innerHTML = `<div class="notification ${type}">${message}</div>`;
+    setTimeout(() => {
+        notificationDiv.innerHTML = '';
+    }, 3000);
 }
 
 // Управление состоянием кнопки
@@ -206,29 +115,106 @@ function setButtonLoading(isLoading) {
     }
 }
 
-// Показ уведомлений
-function showNotification(message, type) {
-    notificationDiv.innerHTML = `
-        <div class="notification ${type}">
-            ${message}
-        </div>
-    `;
-    
-    // Автоматическое скрытие через 4 секунды
-    setTimeout(() => {
-        notificationDiv.innerHTML = '';
-    }, 4000);
-}
+// Загрузка записей при старте
+loadBookings();
 
-// Обработка темы Telegram
-tg.onEvent('themeChanged', () => {
-    // Принудительно обновляем цвета
-    document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+// Обработчик изменения даты
+dateInput.addEventListener('change', () => {
+    if (dateInput.value) {
+        displayAvailableSlots(dateInput.value);
+    }
 });
 
-// Показать приветствие при загрузке
-console.log('Mini App загружен');
-showNotification('👋 Добро пожаловать! Выберите удобное время для записи', 'success');
+// Отправка формы
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const service = serviceSelect.value;
+    const date = dateInput.value;
+    
+    // Валидация
+    if (!name) {
+        showNotification('Пожалуйста, укажите ваше имя', 'error');
+        nameInput.focus();
+        return;
+    }
+    
+    if (!phone) {
+        showNotification('Пожалуйста, укажите телефон для связи', 'error');
+        phoneInput.focus();
+        return;
+    }
+    
+    if (!service) {
+        showNotification('Пожалуйста, выберите услугу', 'error');
+        serviceSelect.focus();
+        return;
+    }
+    
+    if (!date) {
+        showNotification('Пожалуйста, выберите дату', 'error');
+        dateInput.focus();
+        return;
+    }
+    
+    if (!selectedTime) {
+        showNotification('Пожалуйста, выберите время', 'error');
+        return;
+    }
+    
+    // Проверка телефона
+    const phoneRegex = /^[\+\d\s\-\(\)]{10,}$/;
+    if (!phoneRegex.test(phone)) {
+        showNotification('Укажите корректный номер телефона', 'error');
+        return;
+    }
+    
+    // Проверка что время ещё свободно
+    const availableSlots = getAvailableSlots(date);
+    if (!availableSlots.includes(selectedTime)) {
+        showNotification('Это время уже занято! Выберите другое', 'error');
+        displayAvailableSlots(date);
+        return;
+    }
+    
+    // Сохраняем запись
+    const newBooking = {
+        id: Date.now(),
+        name: name,
+        phone: phone,
+        service: service,
+        date: date,
+        time: selectedTime,
+        createdAt: new Date().toLocaleString('ru-RU')
+    };
+    
+    bookings.push(newBooking);
+    saveBookingsToStorage();
+    
+    // Отправляем уведомление мастеру в Telegram
+    const message = `🔔 НОВАЯ ЗАПИСЬ!\n\n` +
+        `👤 Имя: ${name}\n` +
+        `📞 Телефон: ${phone}\n` +
+        `🎨 Услуга: ${service}\n` +
+        `📅 Дата: ${date}\n` +
+        `⏰ Время: ${selectedTime}`;
+    
+    tg.sendData(message);
+    
+    showNotification('✅ Запись создана! Мастер свяжется с вами.', 'success');
+    
+    // Очищаем форму и закрываем
+    setTimeout(() => {
+        form.reset();
+        selectedTime = null;
+        timeSlotsDiv.innerHTML = '<div class="loading-spinner">📅 Выберите дату для просмотра свободного времени</div>';
+        tg.close();
+    }, 2000);
+});
+
+// Приветствие при загрузке
 setTimeout(() => {
-    notificationDiv.innerHTML = '';
-}, 3000);
+    showNotification('👋 Добро пожаловать! Выберите удобное время', 'success');
+}, 500);
