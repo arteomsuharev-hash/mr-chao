@@ -1,133 +1,1259 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>MR. CHAO | TATTOO RECORD</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MR. CHAO TATTOO | ЗАПИСЬ</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg: #000000;
+  --s1: #0a0a0a;
+  --s2: #0f0f0f;
+  --s3: #141414;
+  --border: #1a1a1a;
+  --border2: #222222;
+  --red: #cc0000;
+  --red-dark: #990000;
+  --red-glow: rgba(204, 0, 0, 0.3);
+  --text: #e8e8e8;
+  --text-dim: #aaaaaa;
+  --muted: #444444;
+  --muted2: #666666;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Брутальный шумовой фон */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(92deg, transparent 0px, transparent 2px, rgba(204, 0, 0, 0.03) 2px, rgba(204, 0, 0, 0.03) 3px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(204, 0, 0, 0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Хедер */
+.header {
+  background: var(--bg);
+  border-bottom: 2px solid var(--red);
+  padding: 28px 20px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.header::before {
+  content: 'CHAO';
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 70px;
+  color: rgba(204, 0, 0, 0.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.header-top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: #050000;
+  box-shadow: 0 0 8px var(--red-glow);
+}
+
+.header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 38px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: #fff;
+}
+
+.header h1 em {
+  color: var(--red);
+  font-style: normal;
+  text-shadow: 0 0 4px var(--red-glow);
+}
+
+.header-sub {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-top: 8px;
+}
+
+/* Шаги */
+.steps {
+  display: flex;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+
+.step {
+  flex: 1;
+  padding: 12px 4px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  position: relative;
+  background: var(--s1);
+}
+
+.step:last-child {
+  border-right: none;
+}
+
+.step-n {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: var(--border2);
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.step-n.active {
+  color: var(--red);
+  text-shadow: 0 0 4px var(--red-glow);
+}
+
+.step-n.done {
+  color: var(--red-dark);
+  font-size: 18px;
+}
+
+.step-lbl {
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.step.active .step-lbl {
+  color: var(--red);
+}
+
+.step.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--red);
+  box-shadow: 0 0 4px var(--red-glow);
+}
+
+/* Экраны */
+.screen {
+  display: none;
+  padding: 24px 18px 50px;
+  animation: fadeIn 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.screen.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sc-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.06em;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.sc-sub {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+  border-left: 2px solid var(--red);
+  padding-left: 10px;
+}
+
+/* Карточки услуг */
+.svc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.svc-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.svc-card:active {
+  transform: scale(0.98);
+}
+
+.svc-card.selected {
+  border-left-color: var(--red);
+  background: #0a0000;
+  box-shadow: 0 0 10px var(--red-glow);
+}
+
+.svc-card.selected::after {
+  content: '✕';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--red);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.svc-icon {
+  font-size: 28px;
+  width: 40px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.svc-info {
+  flex: 1;
+}
+
+.svc-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+
+.svc-meta {
+  font-size: 11px;
+  color: var(--muted2);
+  margin-top: 2px;
+}
+
+.svc-price {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--red);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* Блоки */
+.block-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  border-left: 2px solid var(--red);
+  padding-left: 10px;
+}
+
+.size-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.size-btn {
+  flex: 1;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  padding: 12px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.size-btn.sel {
+  border-color: var(--red);
+  background: #0a0000;
+  box-shadow: 0 0 6px var(--red-glow);
+}
+
+.sz-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: #fff;
+  display: block;
+  line-height: 1;
+}
+
+.size-btn.sel .sz-name {
+  color: var(--red);
+}
+
+.sz-cm {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+  margin-top: 3px;
+}
+
+/* Ошибки */
+.err {
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 0.08em;
+  display: none;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.err.show {
+  display: block;
+}
+
+/* Календарь */
+.cal-wrap {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+}
+
+.cal-arrow {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--red);
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-weight: bold;
+}
+
+.cal-arrow:active {
+  background: var(--red);
+  color: #000;
+  border-color: var(--red);
+}
+
+.cal-mname {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.1em;
+  color: #fff;
+}
+
+.cal-wds {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 10px 12px 6px;
+}
+
+.cal-wd {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 4px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 6px 12px 16px;
+  gap: 3px;
+}
+
+.cal-d {
+  text-align: center;
+  padding: 8px 2px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+  border-radius: 0;
+}
+
+.cal-d.empty,
+.cal-d.past {
+  color: var(--border2);
+  cursor: default;
+}
+
+.cal-d.unavail {
+  color: var(--muted);
+  cursor: default;
+  text-decoration: line-through;
+  opacity: 0.4;
+}
+
+.cal-d.avail:active {
+  background: var(--s3);
+}
+
+.cal-d.today:not(.sel) {
+  color: var(--red);
+  font-weight: 700;
+  position: relative;
+}
+
+.cal-d.sel {
+  background: var(--red);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 8px var(--red-glow);
+}
+
+/* Время */
+.times-block {
+  margin-bottom: 20px;
+}
+
+.time-head {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  border-left: 2px solid var(--red);
+  padding-left: 10px;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.t-slot {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.t-slot.sel {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 6px var(--red-glow);
+}
+
+.t-slot.busy {
+  opacity: 0.25;
+  cursor: default;
+  text-decoration: line-through;
+}
+
+/* Форма */
+.f-field {
+  margin-bottom: 16px;
+}
+
+.f-lbl {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 8px;
+}
+
+.f-inp,
+.f-ta {
+  width: 100%;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border2);
+  padding: 12px 14px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+.f-inp:focus,
+.f-ta:focus {
+  border-bottom-color: var(--red);
+  box-shadow: 0 1px 0 var(--red);
+}
+
+.f-inp::placeholder,
+.f-ta::placeholder {
+  color: var(--border2);
+}
+
+.f-ta {
+  resize: none;
+  height: 80px;
+  line-height: 1.5;
+}
+
+/* Место нанесения */
+.place-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.place-btn {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 500;
+}
+
+.place-btn.sel {
+  border-color: var(--red);
+  background: #0a0000;
+  color: var(--text);
+  box-shadow: 0 0 4px var(--red-glow);
+}
+
+/* Карточка суммы */
+.sum-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.sum-head {
+  background: var(--s2);
+  border-bottom: 2px solid var(--red);
+  padding: 10px 14px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  color: var(--red);
+  text-transform: uppercase;
+}
+
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+
+.sum-row:last-child {
+  border-bottom: none;
+}
+
+.sum-k {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.sum-v {
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+  word-break: break-word;
+}
+
+.sum-v.red {
+  color: var(--red);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+}
+
+/* Уведомление */
+.notice {
+  background: #0a0000;
+  border: 1px solid #2a0000;
+  border-left: 3px solid var(--red);
+  padding: 12px 14px;
+  font-size: 11px;
+  color: #996666;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.notice strong {
+  color: var(--red);
+}
+
+/* Кнопки */
+.btn {
+  width: 100%;
+  background: var(--red);
+  border: none;
+  padding: 16px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.2em;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.btn:active:not(:disabled)::before {
+  opacity: 0.15;
+}
+
+.btn-ghost {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 13px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s;
+}
+
+.btn-ghost:active {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* Экран успеха */
+.success-wrap {
+  padding: 40px 18px 50px;
+  animation: fadeIn 0.4s ease;
+}
+
+.success-icon {
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--red);
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: #0a0000;
+  animation: pulseBorder 2.5s infinite;
+}
+
+@keyframes pulseBorder {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(204, 0, 0, 0);
+  }
+}
+
+.success-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 0.08em;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.success-title em {
+  color: var(--red);
+  font-style: normal;
+}
+
+.success-sub {
+  font-size: 12px;
+  color: var(--muted2);
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.sep {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+/* Спиннер */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Адаптив */
+@media (max-width: 480px) {
+  .header {
+    padding: 20px 16px 16px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .sc-title {
+    font-size: 26px;
+  }
+
+  .svc-card {
+    padding: 10px 12px;
+  }
+
+  .svc-name {
+    font-size: 14px;
+  }
+
+  .svc-price {
+    font-size: 16px;
+  }
+
+  .size-row {
+    gap: 6px;
+  }
+
+  .sz-name {
+    font-size: 18px;
+  }
+
+  .time-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .place-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
 </head>
 <body>
-    <!-- Брутальный фон -->
-    <div class="dark-bg">
-        <div class="noise"></div>
-        <div class="overlay-gradient"></div>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo-icon">⛓️</div>
+    <h1>MR.<em>CHAO</em></h1>
+  </div>
+  <div class="header-sub">BRUTAL TATTOO STUDIO</div>
+</div>
+
+<div class="steps">
+  <div class="step active" id="s1"><div class="step-n active" id="sn1">1</div><div class="step-lbl">УСЛУГА</div></div>
+  <div class="step" id="s2"><div class="step-n" id="sn2">2</div><div class="step-lbl">ДАТА</div></div>
+  <div class="step" id="s3"><div class="step-n" id="sn3">3</div><div class="step-lbl">ДАННЫЕ</div></div>
+  <div class="step" id="s4"><div class="step-n" id="sn4">4</div><div class="step-lbl">ИТОГ</div></div>
+</div>
+
+<!-- SCREEN 1 - УСЛУГА -->
+<div class="screen active" id="sc1">
+  <div class="sc-title">ВЫБОР УСЛУГИ</div>
+  <div class="sc-sub">Что будем делать?</div>
+  <div class="svc-list">
+    <div class="svc-card" onclick="pickSvc(this,'НОВАЯ ТАТУИРОВКА','от 8 000 ₽')">
+      <div class="svc-icon">🖋️</div>
+      <div class="svc-info"><div class="svc-name">Новая татуировка</div><div class="svc-meta">Оригинальный эскиз / референс · 2–6 ч</div></div>
+      <div class="svc-price">от 8 000 ₽</div>
     </div>
-
-    <div class="container">
-        <!-- Хедер с логотипом -->
-        <header class="header">
-            <div class="logo">
-                <span class="logo-icon">⛓️</span>
-                <span class="logo-text">MR. CHAO</span>
-                <span class="logo-line"></span>
-            </div>
-            <div class="tagline">CUSTOM TATTOO STUDIO</div>
-        </header>
-
-        <!-- Главный блок -->
-        <main class="main">
-            <!-- Приветственный блок -->
-            <div class="hero">
-                <h1 class="hero-title">
-                    <span class="title-brutal">BRUTAL</span>
-                    <span class="title-style">STYLE</span>
-                </h1>
-                <p class="hero-desc">Индивидуальный дизайн. Качественные материалы. <br>Работы, которые говорят сами за себя.</p>
-            </div>
-
-            <!-- Карточка записи -->
-            <div class="booking-card">
-                <div class="card-header">
-                    <div class="card-badge">✧ ЗАПИСЬ ОНЛАЙН ✧</div>
-                    <h2>ЗАПОЛНИ ФОРМУ</h2>
-                    <p>Я свяжусь с тобой в течение 24 часов</p>
-                </div>
-
-                <div id="notification"></div>
-
-                <form id="bookingForm">
-                    <!-- Имя -->
-                    <div class="input-field">
-                        <input type="text" id="name" placeholder="ТВОЁ ИМЯ" required>
-                        <span class="field-border"></span>
-                    </div>
-
-                    <!-- Телефон -->
-                    <div class="input-field">
-                        <input type="tel" id="phone" placeholder="ТЕЛЕФОН ДЛЯ СВЯЗИ" required>
-                        <span class="field-border"></span>
-                    </div>
-
-                    <!-- Услуга -->
-                    <div class="select-field">
-                        <select id="service" required>
-                            <option value="" disabled selected>ВЫБЕРИ УСЛУГУ</option>
-                            <option value="Тату (маленькая)">ТАТУ МАЛЕНЬКАЯ (до 10 см) — 5 000₽</option>
-                            <option value="Тату (средняя)">ТАТУ СРЕДНЯЯ (10-20 см) — 10 000₽</option>
-                            <option value="Тату (большая)">ТАТУ БОЛЬШАЯ (от 20 см) — 15 000₽</option>
-                            <option value="Перекрытие">ПЕРЕКРЫТИЕ СТАРОЙ ТАТУ — от 10 000₽</option>
-                            <option value="Консультация">КОНСУЛЬТАЦИЯ — БЕСПЛАТНО</option>
-                        </select>
-                        <span class="field-border"></span>
-                    </div>
-
-                    <!-- Дата и время -->
-                    <div class="row-2">
-                        <div class="input-field">
-                            <input type="date" id="date" required>
-                            <span class="field-border"></span>
-                        </div>
-                        <div class="input-field">
-                            <div id="timeSlots" class="time-slots-container">
-                                <div class="time-placeholder">ВЫБЕРИ ДАТУ</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Кнопка -->
-                    <button type="submit" class="brutal-btn" id="submitBtn">
-                        <span class="btn-text">ОТПРАВИТЬ ЗАЯВКУ</span>
-                        <span class="btn-loading" style="display: none;">ОТПРАВКА...</span>
-                        <span class="btn-arrow">→</span>
-                    </button>
-
-                    <p class="form-note">Нажимая на кнопку, ты соглашаешься с условиями обработки данных</p>
-                </form>
-            </div>
-
-            <!-- Преимущества -->
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">⚔️</div>
-                    <h3>СТЕРИЛЬНО</h3>
-                    <p>Одноразовые иглы<br>и расходники</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🎯</div>
-                    <h3>ИНДИВИДУАЛЬНО</h3>
-                    <p>Уникальный дизайн<br>под твой запрос</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">💀</div>
-                    <h3>НАДЁЖНО</h3>
-                    <p>Более 7 лет опыта<br>500+ работ</p>
-                </div>
-            </div>
-
-            <!-- Контакты -->
-            <footer class="footer">
-                <div class="social">
-                    <a href="#" class="social-link">INSTAGRAM</a>
-                    <a href="#" class="social-link">TELEGRAM</a>
-                    <a href="#" class="social-link">WHATSAPP</a>
-                </div>
-                <div class="copyright">© MR. CHAO TATTOO — 2024</div>
-            </footer>
-        </main>
+    <div class="svc-card" onclick="pickSvc(this,'ПЕРЕКРЫТИЕ','от 10 000 ₽')">
+      <div class="svc-icon">◼️</div>
+      <div class="svc-info"><div class="svc-name">Перекрытие (Cover-up)</div><div class="svc-meta">Перекрытие старой тату · 3–8 ч</div></div>
+      <div class="svc-price">от 10 000 ₽</div>
     </div>
+    <div class="svc-card" onclick="pickSvc(this,'ДОРАБОТКА','от 8 000 ₽')">
+      <div class="svc-icon">✏️</div>
+      <div class="svc-info"><div class="svc-name">Доработка / Touch-up</div><div class="svc-meta">Обновление и исправление · 1–3 ч</div></div>
+      <div class="svc-price">от 8 000 ₽</div>
+    </div>
+    <div class="svc-card" onclick="pickSvc(this,'КОНСУЛЬТАЦИЯ','Бесплатно')">
+      <div class="svc-icon">💬</div>
+      <div class="svc-info"><div class="svc-name">Консультация</div><div class="svc-meta">Обсуждение идеи и эскиза · 30 мин</div></div>
+      <div class="svc-price" style="color:var(--muted2); font-size:14px;">Бесплатно</div>
+    </div>
+  </div>
+  <div class="block-label">РАЗМЕР РАБОТЫ</div>
+  <div class="size-row">
+    <div class="size-btn" onclick="pickSize(this,'S')"><span class="sz-name">S</span><span class="sz-cm">до 5 см</span></div>
+    <div class="size-btn" onclick="pickSize(this,'M')"><span class="sz-name">M</span><span class="sz-cm">5–12 см</span></div>
+    <div class="size-btn" onclick="pickSize(this,'L')"><span class="sz-name">L</span><span class="sz-cm">12–25 см</span></div>
+    <div class="size-btn" onclick="pickSize(this,'XL')"><span class="sz-name">XL</span><span class="sz-cm">25+ см</span></div>
+  </div>
+  <div class="err" id="e1">✕ ВЫБЕРИТЕ УСЛУГУ И РАЗМЕР</div>
+  <button class="btn" onclick="go(2)">ДАЛЬШЕ →</button>
+</div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
-    <script src="script.js"></script>
+<!-- SCREEN 2 - ДАТА И ВРЕМЯ -->
+<div class="screen" id="sc2">
+  <div class="sc-title">ДАТА И ВРЕМЯ</div>
+  <div class="sc-sub">Выберите свободный слот</div>
+  <div class="cal-wrap">
+    <div class="cal-head">
+      <button class="cal-arrow" onclick="prevM()">‹</button>
+      <div class="cal-mname" id="mname"></div>
+      <button class="cal-arrow" onclick="nextM()">›</button>
+    </div>
+    <div class="cal-wds">
+      <div class="cal-wd">ПН</div><div class="cal-wd">ВТ</div><div class="cal-wd">СР</div>
+      <div class="cal-wd">ЧТ</div><div class="cal-wd">ПТ</div><div class="cal-wd">СБ</div><div class="cal-wd">ВС</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+  <div class="times-block" id="times-block" style="display:none">
+    <div class="time-head">СВОБОДНОЕ ВРЕМЯ — <span id="t-date-lbl" style="color:var(--red)"></span></div>
+    <div class="time-grid" id="time-grid"></div>
+  </div>
+  <div class="err" id="e2">✕ ВЫБЕРИТЕ ДАТУ И ВРЕМЯ</div>
+  <button class="btn" onclick="go(3)">ДАЛЬШЕ →</button>
+  <button class="btn-ghost" onclick="go(1)">← НАЗАД</button>
+</div>
+
+<!-- SCREEN 3 - ДАННЫЕ КЛИЕНТА -->
+<div class="screen" id="sc3">
+  <div class="sc-title">ДАННЫЕ КЛИЕНТА</div>
+  <div class="sc-sub">Контактная информация</div>
+  <div class="f-field">
+    <label class="f-lbl">ИМЯ *</label>
+    <input class="f-inp" id="f-name" type="text" placeholder="Как вас зовут?" autocomplete="name">
+  </div>
+  <div class="f-field">
+    <label class="f-lbl">ТЕЛЕФОН *</label>
+    <input class="f-inp" id="f-phone" type="tel" placeholder="+7 (___) ___-__-__" autocomplete="tel">
+  </div>
+  <div class="f-field">
+    <div class="block-label" style="margin-bottom:10px">МЕСТО НАНЕСЕНИЯ</div>
+    <div class="place-grid">
+      <div class="place-btn" onclick="pickPlace(this,'Рука')">РУКА</div>
+      <div class="place-btn" onclick="pickPlace(this,'Нога')">НОГА</div>
+      <div class="place-btn" onclick="pickPlace(this,'Грудь')">ГРУДЬ</div>
+      <div class="place-btn" onclick="pickPlace(this,'Спина')">СПИНА</div>
+      <div class="place-btn" onclick="pickPlace(this,'Шея')">ШЕЯ</div>
+      <div class="place-btn" onclick="pickPlace(this,'Другое')">ДРУГОЕ</div>
+    </div>
+  </div>
+  <div class="f-field">
+    <label class="f-lbl">ОПИСАНИЕ ИДЕИ / РЕФЕРЕНС</label>
+    <textarea class="f-ta" id="f-idea" placeholder="Стиль, мотив, пожелания..."></textarea>
+  </div>
+  <div class="f-field">
+    <label class="f-lbl">АЛЛЕРГИИ / ОСОБЫЕ ПОЖЕЛАНИЯ</label>
+    <input class="f-inp" id="f-notes" type="text" placeholder="Нет / уточните...">
+  </div>
+  <div class="err" id="e3">✕ ЗАПОЛНИТЕ ИМЯ И ТЕЛЕФОН</div>
+  <button class="btn" onclick="go(4)">ДАЛЬШЕ →</button>
+  <button class="btn-ghost" onclick="go(2)">← НАЗАД</button>
+</div>
+
+<!-- SCREEN 4 - ПОДТВЕРЖДЕНИЕ -->
+<div class="screen" id="sc4">
+  <div class="sc-title">ПОДТВЕРЖДЕНИЕ</div>
+  <div class="sc-sub">Проверьте данные записи</div>
+  <div class="sum-card">
+    <div class="sum-head">⚔️ СЕАНС</div>
+    <div class="sum-row"><span class="sum-k">Услуга</span><span class="sum-v" id="sv-svc"></span></div>
+    <div class="sum-row"><span class="sum-k">Размер</span><span class="sum-v" id="sv-size"></span></div>
+    <div class="sum-row"><span class="sum-k">Дата</span><span class="sum-v" id="sv-date"></span></div>
+    <div class="sum-row"><span class="sum-k">Время</span><span class="sum-v red" id="sv-time"></span></div>
+    <div class="sum-row"><span class="sum-k">Место нанесения</span><span class="sum-v" id="sv-place"></span></div>
+    <div class="sum-row"><span class="sum-k">Стоимость</span><span class="sum-v red" id="sv-price"></span></div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-head">🗡️ КЛИЕНТ</div>
+    <div class="sum-row"><span class="sum-k">Имя</span><span class="sum-v" id="sv-name"></span></div>
+    <div class="sum-row"><span class="sum-k">Телефон</span><span class="sum-v" id="sv-phone"></span></div>
+  </div>
+  <div class="notice"><strong>⚡ ВАЖНО:</strong> После отправки мастер свяжется с вами в течение <strong>1–2 часов</strong> для подтверждения. Запись активна только после ответного сообщения.</div>
+  <button class="btn" id="submit-btn" onclick="submitForm()">✕ ОТПРАВИТЬ ЗАЯВКУ</button>
+  <button class="btn-ghost" onclick="go(3)">← НАЗАД</button>
+</div>
+
+<!-- SCREEN 5 - УСПЕХ -->
+<div class="screen" id="sc5">
+  <div class="success-wrap">
+    <div class="success-icon">✕</div>
+    <div class="success-title">ЗАЯВКА<br><em>ОТПРАВЛЕНА</em></div>
+    <div class="success-sub">Мастер Mr. Chao получил вашу запись<br>и свяжется с вами для подтверждения.</div>
+    <div class="sum-card">
+      <div class="sum-head">⚔️ ВАША ЗАПИСЬ</div>
+      <div class="sum-row"><span class="sum-k">Услуга</span><span class="sum-v" id="fn-svc"></span></div>
+      <div class="sum-row"><span class="sum-k">Дата и время</span><span class="sum-v red" id="fn-dt"></span></div>
+      <div class="sum-row"><span class="sum-k">Клиент</span><span class="sum-v" id="fn-name"></span></div>
+      <div class="sum-row"><span class="sum-k">Стоимость</span><span class="sum-v red" id="fn-price"></span></div>
+    </div>
+    <button class="btn" onclick="closeApp()">ЗАКРЫТЬ</button>
+  </div>
+</div>
+
+<script>
+// ── КОНФИГУРАЦИЯ ──
+const BOT_TOKEN = '8209263425:AAFZQzJCzLmnV044UPaCWJWJZ3ZQw24H85k';
+const CHAT_ID = '1085941747';
+
+// ── СОСТОЯНИЕ ──
+const D = {
+  svc: null, price: null, size: null,
+  date: null, time: null,
+  name: '', phone: '',
+  place: null, idea: '', notes: ''
+};
+
+// ── КАЛЕНДАРЬ ──
+const now = new Date();
+let cy = now.getFullYear();
+let cm = now.getMonth();
+const MN = ['ЯНВАРЬ', 'ФЕВРАЛЬ', 'МАРТ', 'АПРЕЛЬ', 'МАЙ', 'ИЮНЬ', 'ИЮЛЬ', 'АВГУСТ', 'СЕНТЯБРЬ', 'ОКТЯБРЬ', 'НОЯБРЬ', 'ДЕКАБРЬ'];
+
+// Занятые дни и время
+const BUSY_DAYS = [3, 7, 14, 21, 28];
+const BUSY_SLOTS = ['12:00', '15:00', '19:00'];
+
+function renderCal() {
+  document.getElementById('mname').textContent = MN[cm] + ' ' + cy;
+  const first = new Date(cy, cm, 1).getDay();
+  const total = new Date(cy, cm + 1, 0).getDate();
+  const off = first === 0 ? 6 : first - 1;
+  const g = document.getElementById('cal-grid');
+  g.innerHTML = '';
+
+  for (let i = 0; i < off; i++) {
+    const e = document.createElement('div');
+    e.className = 'cal-d empty';
+    g.appendChild(e);
+  }
+
+  for (let d = 1; d <= total; d++) {
+    const dt = new Date(cy, cm, d);
+    const past = dt < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const busy = BUSY_DAYS.includes(d);
+    const tod = dt.toDateString() === now.toDateString();
+    const sel = D.date && D.date.getDate() === d && D.date.getMonth() === cm && D.date.getFullYear() === cy;
+    const e = document.createElement('div');
+    e.textContent = d;
+
+    if (sel) e.className = 'cal-d sel';
+    else if (past) e.className = 'cal-d past';
+    else if (busy) e.className = 'cal-d unavail';
+    else if (tod) e.className = 'cal-d today avail';
+    else e.className = 'cal-d avail';
+
+    if (!past && !busy) e.onclick = () => pickDate(new Date(cy, cm, d));
+    g.appendChild(e);
+  }
+}
+
+function prevM() {
+  cm--;
+  if (cm < 0) { cm = 11; cy--; }
+  if (cy < now.getFullYear() || (cy === now.getFullYear() && cm < now.getMonth())) {
+    cm = now.getMonth();
+    cy = now.getFullYear();
+    return;
+  }
+  renderCal();
+}
+
+function nextM() {
+  cm++;
+  if (cm > 11) { cm = 0; cy++; }
+  renderCal();
+}
+
+function pickDate(dt) {
+  D.date = dt;
+  D.time = null;
+  renderCal();
+  showTimes(dt);
+}
+
+function showTimes(dt) {
+  const all = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+  const mo = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+  document.getElementById('t-date-lbl').textContent = dt.getDate() + ' ' + mo[dt.getMonth()];
+  const g = document.getElementById('time-grid');
+  g.innerHTML = '';
+
+  all.forEach(s => {
+    const e = document.createElement('div');
+    const b = BUSY_SLOTS.includes(s);
+    e.className = 't-slot' + (b ? ' busy' : '');
+    e.textContent = s;
+    if (!b) e.onclick = () => {
+      document.querySelectorAll('.t-slot').forEach(x => x.classList.remove('sel'));
+      e.classList.add('sel');
+      D.time = s;
+    };
+    g.appendChild(e);
+  });
+  document.getElementById('times-block').style.display = 'block';
+}
+
+// ── ВЫБОР УСЛУГ И РАЗМЕРОВ ──
+function pickSvc(el, name, price) {
+  document.querySelectorAll('.svc-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  D.svc = name;
+  D.price = price;
+}
+
+function pickSize(el, sz) {
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  D.size = sz;
+}
+
+function pickPlace(el, p) {
+  document.querySelectorAll('.place-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  D.place = p;
+}
+
+// ── НАВИГАЦИЯ ──
+function go(n) {
+  if (n === 2 && (!D.svc || !D.size)) {
+    document.getElementById('e1').classList.add('show');
+    return;
+  }
+  if (n === 3 && (!D.date || !D.time)) {
+    document.getElementById('e2').classList.add('show');
+    return;
+  }
+  if (n === 4) {
+    const nm = document.getElementById('f-name').value.trim();
+    const ph = document.getElementById('f-phone').value.trim();
+    if (!nm || !ph) {
+      document.getElementById('e3').classList.add('show');
+      return;
+    }
+    D.name = nm;
+    D.phone = ph;
+    D.idea = document.getElementById('f-idea').value.trim();
+    D.notes = document.getElementById('f-notes').value.trim();
+    fillSum();
+  }
+
+  document.querySelectorAll('.err').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('sc' + n).classList.add('active');
+  updateSteps(n);
+  window.scrollTo(0, 0);
+}
+
+function updateSteps(n) {
+  for (let i = 1; i <= 4; i++) {
+    const sn = document.getElementById('sn' + i);
+    const si = document.getElementById('s' + i);
+    sn.className = 'step-n';
+    si.className = 'step';
+    if (i < n) {
+      sn.classList.add('done');
+      sn.textContent = '✓';
+    } else if (i === n) {
+      sn.classList.add('active');
+      sn.textContent = i;
+      si.classList.add('active');
+    } else {
+      sn.textContent = i;
+    }
+  }
+}
+
+function fillSum() {
+  const mo = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  const ds = D.date ? `${D.date.getDate()} ${mo[D.date.getMonth()]} ${D.date.getFullYear()}` : '—';
+  document.getElementById('sv-svc').textContent = D.svc || '—';
+  document.getElementById('sv-size').textContent = D.size ? 'Размер ' + D.size : '—';
+  document.getElementById('sv-date').textContent = ds;
+  document.getElementById('sv-time').textContent = D.time || '—';
+  document.getElementById('sv-place').textContent = D.place || 'Не указано';
+  document.getElementById('sv-price').textContent = D.price || '—';
+  document.getElementById('sv-name').textContent = D.name;
+  document.getElementById('sv-phone').textContent = D.phone;
+}
+
+// ── ОТПРАВКА В TELEGRAM ──
+async function submitForm() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>ОТПРАВЛЯЕМ...';
+
+  const mo = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  const ds = D.date ? `${D.date.getDate()} ${mo[D.date.getMonth()]} ${D.date.getFullYear()}` : '—';
+
+  let clientTg = '';
+  try {
+    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    if (user) {
+      clientTg = user.username ? `@${user.username}` : `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    }
+  } catch (e) {}
+
+  const text = `⚔️ *НОВАЯ ЗАЯВКА НА СЕАНС* ⚔️
+
+📋 *Услуга:* ${D.svc}
+📐 *Размер:* ${D.size}
+📍 *Место:* ${D.place || 'Не указано'}
+💰 *Стоимость:* ${D.price}
+
+📅 *Дата:* ${ds}
+🕐 *Время:* ${D.time}
+
+👤 *Клиент:* ${D.name}
+📞 *Телефон:* ${D.phone}${clientTg ? `\n✈️ *Telegram:* ${clientTg}` : ''}${D.idea ? `\n\n💬 *Идея:* ${D.idea}` : ''}${D.notes ? `\n⚠️ *Пожелания:* ${D.notes}` : ''}`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: text,
+        parse_mode: 'Markdown'
+      })
+    });
+  } catch (err) {
+    console.error('Send error:', err);
+  }
+
+  // Показываем экран успеха
+  document.getElementById('fn-svc').textContent = D.svc;
+  document.getElementById('fn-dt').textContent = `${ds}, ${D.time}`;
+  document.getElementById('fn-name').textContent = D.name;
+  document.getElementById('fn-price').textContent = D.price;
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelector('.steps').style.display = 'none';
+  document.getElementById('sc5').classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function closeApp() {
+  if (window.Telegram?.WebApp) window.Telegram.WebApp.close();
+}
+
+// ── ИНИЦИАЛИЗАЦИЯ ──
+if (window.Telegram?.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+renderCal();
+</script>
 </body>
 </html>
