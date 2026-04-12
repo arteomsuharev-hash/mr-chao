@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>MR. CHAO TATTOO | STUDIO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -37,8 +37,8 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .portfolio-title{font-weight:600;margin-bottom:4px;}
 .portfolio-desc{font-size:12px;color:var(--text-muted);}
 .booking-card{background:var(--bg-card);border:1px solid var(--border);padding:30px;max-width:900px;margin:0 auto;}
-.steps{display:flex;margin-bottom:30px;border-bottom:1px solid var(--border);}
-.step{flex:1;padding:12px;text-align:center;cursor:pointer;transition:all 0.2s;border-bottom:2px solid transparent;}
+.steps{display:flex;margin-bottom:30px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.step{flex:1;padding:12px;text-align:center;cursor:pointer;transition:all 0.2s;border-bottom:2px solid transparent;min-width:60px;}
 .step.active{border-bottom-color:var(--gray-light);}
 .step-num{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text-muted);}
 .step.active .step-num{color:#fff;}
@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .step-content.active{display:block;}
 .form-group{margin-bottom:20px;}
 label{display:block;font-size:11px;letter-spacing:2px;margin-bottom:8px;color:var(--text-muted);}
-input,select,textarea{width:100%;padding:12px 16px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:all 0.2s;}
+input,select,textarea{width:100%;padding:12px 16px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:all 0.2s;border-radius:0;}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-light);}
 .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
 .service-card{background:var(--bg-elevated);border:1px solid var(--border);padding:16px;cursor:pointer;transition:all 0.2s;}
@@ -60,8 +60,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-lig
 .size-btn{padding:10px 20px;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
 .size-btn.selected{border-color:var(--gray-light);background:var(--gray);}
 .size-btn.hidden{display:none;}
-.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;}
-.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);}
+.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
 .cal-month{font-family:'Bebas Neue',sans-serif;font-size:20px;}
 .cal-nav{background:var(--bg-card);border:1px solid var(--border);padding:6px 12px;cursor:pointer;transition:all 0.2s;}
 .cal-nav:hover{background:var(--gray);}
@@ -115,7 +115,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-lig
 .portfolio-admin-desc{font-size:12px;color:var(--text-muted);}
 .delete-btn{background:transparent;border:1px solid var(--border);padding:6px 16px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
 .delete-btn:hover{border-color:var(--gray-light);color:var(--text);}
-.booking-history-table{width:100%;border-collapse:collapse;margin-top:16px;}
+.booking-history-table{width:100%;border-collapse:collapse;margin-top:16px;overflow-x:auto;display:block;}
 .booking-history-table th,.booking-history-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border);}
 .booking-history-table th{color:var(--text-muted);font-size:11px;letter-spacing:1px;}
 .status{padding:4px 8px;font-size:11px;background:var(--gray);display:inline-block;}
@@ -126,9 +126,23 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-lig
 footer{margin-top:60px;padding:20px;border-top:1px solid var(--border);text-align:center;}
 footer p{color:var(--text-muted);font-size:12px;margin-bottom:8px;}
 footer p:last-child{font-size:11px;}
-.notification{position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;z-index:1000;animation:slideIn 0.3s ease;}
+.notification{position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;z-index:1000;animation:slideIn 0.3s ease;max-width:90%;}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
-@media (max-width:768px){.container{padding:12px;}.header{flex-direction:column;text-align:center;}.nav-btn{padding:10px 16px;font-size:14px;}.booking-card{padding:20px;}.services-grid{grid-template-columns:1fr;}.cal-days{gap:2px;}.cal-day{padding:6px;font-size:12px;}}
+@media (max-width:768px){
+  .container{padding:12px;}
+  .header{flex-direction:column;text-align:center;}
+  .nav-btn{padding:10px 16px;font-size:14px;}
+  .booking-card{padding:20px;}
+  .services-grid{grid-template-columns:1fr;}
+  .cal-days{gap:2px;}
+  .cal-day{padding:6px;font-size:12px;}
+  .steps{flex-wrap:wrap;}
+  .step{padding:8px 4px;}
+  .step-num{font-size:16px;}
+  .step-label{font-size:8px;}
+  .time-slots{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));}
+  .booking-history-table th,.booking-history-table td{padding:8px;font-size:10px;}
+}
 .loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 </style>
@@ -284,7 +298,7 @@ footer p:last-child{font-size:11px;}
   </div>
   
   <footer>
-    <p>📍 Хабаровск, ул. Муравьёва-Амурского, 15</p>
+    <p>📍 Хабаровск, ул. Ленинградская, 73Б</p>
     <p>Точная локация придёт в сообщении после записи</p>
   </footer>
   
@@ -296,6 +310,8 @@ const BOT_TOKEN = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID = '1085941747';
 const ADMIN_CLICK_COUNT = 15;
 const ADMIN_PASSWORD = 'chao123';
+const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
+const STUDIO_GEO_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
 
 // ==================== ЗАЩИТА ОТ DDoS ====================
 let requestCount = 0;
@@ -343,7 +359,6 @@ function loadBookedSlots() {
 
 function saveBookedSlots() {
   localStorage.setItem('tattoo_booked_slots', JSON.stringify(bookedSlots));
-  // Уведомляем другие вкладки об изменении
   window.dispatchEvent(new StorageEvent('storage', { key: 'tattoo_booked_slots', newValue: JSON.stringify(bookedSlots) }));
 }
 
@@ -389,7 +404,6 @@ function loadAllBookings() {
 function saveAllBookings() {
   localStorage.setItem('tattoo_all_bookings', JSON.stringify(allBookings));
   renderBookingsHistory();
-  // Уведомляем другие вкладки об изменении
   window.dispatchEvent(new StorageEvent('storage', { key: 'tattoo_all_bookings', newValue: JSON.stringify(allBookings) }));
 }
 
@@ -410,7 +424,6 @@ async function cancelBooking(bookingId, source = 'admin') {
     saveAllBookings();
     showNotification('Запись отменена, слот освобождён');
     
-    // Отправляем уведомление клиенту
     if (booking.tgUserId) {
       const cancelMessage = source === 'admin' 
         ? '❌ Ваша запись была ОТМЕНЕНА администратором. Слот освобождён. Вы можете записаться на другое время.'
@@ -433,29 +446,30 @@ function renderBookingsHistory() {
   }
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   container.innerHTML = `
-    <table class="booking-history-table">
-      <thead><tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Услуга</th><th>Статус</th><th></th></tr></thead>
-      <tbody>
-        ${allBookings.map(b => {
-          const dateObj = b.date ? new Date(b.date) : null;
-          const dateStr = dateObj ? `${dateObj.getDate()} ${mo[dateObj.getMonth()]} ${dateObj.getFullYear()}` : '—';
-          const statusText = b.status === 'cancelled' ? 'ОТМЕНЕНА' : (b.status === 'confirmed' ? 'ПОДТВЕРЖДЕНА' : 'НОВАЯ');
-          const statusClass = b.status === 'cancelled' ? 'cancelled' : (b.status === 'confirmed' ? 'confirmed' : '');
-          return `<tr>
-            <td>${dateStr}</td>
-            <td>${b.time || '—'}</td>
-            <td>${b.name}<br><small style="color:#666">${b.phone}</small></td>
-            <td>${b.service}<br><small style="color:#666">${b.size || ''}</small></td>
-            <td><span class="status ${statusClass}">${statusText}</span></td>
-            <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking(${b.id}, 'admin')">ОТМЕНИТЬ</button>` : '—'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </tr>
+    <div style="overflow-x:auto;">
+      <table class="booking-history-table">
+        <thead><tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Услуга</th><th>Статус</th><th></th></tr></thead>
+        <tbody>
+          ${allBookings.map(b => {
+            const dateObj = b.date ? new Date(b.date) : null;
+            const dateStr = dateObj ? `${dateObj.getDate()} ${mo[dateObj.getMonth()]} ${dateObj.getFullYear()}` : '—';
+            const statusText = b.status === 'cancelled' ? 'ОТМЕНЕНА' : (b.status === 'confirmed' ? 'ПОДТВЕРЖДЕНА' : 'НОВАЯ');
+            const statusClass = b.status === 'cancelled' ? 'cancelled' : (b.status === 'confirmed' ? 'confirmed' : '');
+            return `<tr>
+              <td>${dateStr}</td>
+              <td>${b.time || '—'}</td>
+              <td>${escapeHtml(b.name)}<br><small style="color:#666">${b.phone}</small></td>
+              <td>${escapeHtml(b.service)}<br><small style="color:#666">${b.size || ''}</small></td>
+              <td><span class="status ${statusClass}">${statusText}</span></td>
+              <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking(${b.id}, 'admin')">ОТМЕНИТЬ</button>` : '—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
-// Слушаем изменения в других вкладках
 window.addEventListener('storage', (e) => {
   if (e.key === 'tattoo_all_bookings' || e.key === 'tattoo_booked_slots') {
     loadBookedSlots();
@@ -798,7 +812,7 @@ async function submitBooking() {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
     }
     
-    const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${dateStr}\n⏰ ${selectedTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selectedService?.name}\n\n🗺️ Адрес студии: https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886\n\n⚠️ ВНИМАНИЕ: Слот забронирован. Если нужно отменить запись, нажмите кнопку ниже.`;
+    const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${dateStr}\n⏰ ${selectedTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selectedService?.name}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\n⚠️ ВНИМАНИЕ: Слот забронирован. Если нужно отменить запись, нажмите кнопку ниже.`;
     const keyboard = {
       inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: `cancel_${newBooking.id}` }]]
     };
@@ -846,7 +860,6 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-// Глобальная функция для отмены через бота
 window.cancelBooking = cancelBooking;
 
 // ==================== НАПОМИНАНИЯ ====================
@@ -863,7 +876,7 @@ function checkReminders() {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: booking.tgUserId, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\nДо встречи!` })
+          body: JSON.stringify({ chat_id: booking.tgUserId, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` })
         });
       }
     }
