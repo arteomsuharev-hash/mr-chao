@@ -335,6 +335,7 @@ let tgUser = null;
 let tgUserInfo = '';
 let tgUserId = null;
 let isProcessing = false;
+let currentBookedSlots = {};
 
 // ==================== SUPABASE ФУНКЦИИ ====================
 async function loadBookedSlotsForMonth(year, month) {
@@ -588,7 +589,7 @@ function renderBookingsHistory() {
               <td>${escapeHtml(b.service)}<br><small style="color:#666">${b.size || ''}</small></td>
               <td><span class="status ${statusClass}">${statusText}</span></td>
               <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking('${b.id}')">ОТМЕНИТЬ</button>` : '—'}</td>
-            <tr>`;
+            </tr>`;
           }).join('')}
         </tbody>
       </table>
@@ -680,8 +681,6 @@ function selectSize(index) {
 }
 
 // ==================== КАЛЕНДАРЬ ====================
-let currentBookedSlots = {};
-
 async function renderCalendar() {
   const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
