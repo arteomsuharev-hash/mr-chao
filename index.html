@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>MR. CHAO TATTOO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -145,6 +145,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content
 .time-slot.selected{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
 .time-slot.disabled{opacity:.25;text-decoration:line-through;pointer-events:none}
 
+/* MEDIA UPLOAD */
+.media-upload-area{margin-bottom:1.5rem}
+.media-upload-label{display:inline-flex;align-items:center;gap:.6rem;border:1px solid var(--border2);color:var(--silver);font-size:9px;letter-spacing:.35em;text-transform:uppercase;padding:.7rem 1.3rem;cursor:none;transition:all .3s;margin-bottom:.8rem}
+.media-upload-label:hover{border-color:var(--accent);color:var(--accent)}
+.media-upload-label input{display:none}
+.media-preview{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+.media-item{position:relative;width:70px;height:70px;border:1px solid var(--border);overflow:hidden;background:var(--surface)}
+.media-item img{width:100%;height:100%;object-fit:cover}
+.media-remove{position:absolute;top:-6px;right:-6px;background:var(--accent);color:var(--black);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;font-weight:bold}
+.media-file{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--silver);font-size:10px;text-align:center;padding:5px}
+
 /* SUMMARY */
 .summary-grid{border:1px solid var(--border)}
 .summary-row{display:flex;justify-content:space-between;padding:.9rem 1.2rem;border-bottom:1px solid var(--border)}
@@ -222,15 +233,11 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
   footer{flex-direction:column;gap:1.2rem;text-align:center}
   body{cursor:auto}
   .cursor,.cursor-ring{display:none}
-
-  /* Mobile nav bottom bar */
   .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(8,8,8,.97);border-top:1px solid var(--border);z-index:500;backdrop-filter:blur(8px)}
   .mobile-nav-btn{flex:1;padding:.8rem .5rem .6rem;background:transparent;border:none;color:var(--silver);font-family:var(--font-b);font-size:7px;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;transition:color .3s;display:flex;flex-direction:column;align-items:center;gap:.2rem}
   .mobile-nav-btn.active,.mobile-nav-btn:hover{color:var(--accent)}
   .mobile-nav-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
   .panel{padding-bottom:6rem}
-  
-  /* Admin button on mobile */
   .admin-mobile-btn{position:fixed;top:70px;right:10px;z-index:501;background:rgba(0,0,0,0.7);border:1px solid var(--accent);color:var(--accent);padding:8px 12px;font-size:10px;letter-spacing:.2em;cursor:pointer;backdrop-filter:blur(8px);font-family:var(--font-b);border-radius:0}
 }
 @media(min-width:701px){.mobile-nav{display:none}.admin-mobile-btn{display:none}}
@@ -254,27 +261,14 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
   <div class="user-badge" id="userBadge">—</div>
 </nav>
 
-<!-- Admin button for mobile -->
 <button class="admin-mobile-btn" id="adminMobileBtn" style="display:none">⚡ ADMIN</button>
 
 <!-- MOBILE NAV -->
 <div class="mobile-nav">
-  <button class="mobile-nav-btn active" data-panel="hero">
-    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    Главная
-  </button>
-  <button class="mobile-nav-btn" data-panel="about">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-    Мастер
-  </button>
-  <button class="mobile-nav-btn" data-panel="booking">
-    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    Запись
-  </button>
-  <button class="mobile-nav-btn" data-panel="portfolio">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-    Портфолио
-  </button>
+  <button class="mobile-nav-btn active" data-panel="hero"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Главная</button>
+  <button class="mobile-nav-btn" data-panel="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Мастер</button>
+  <button class="mobile-nav-btn" data-panel="booking"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Запись</button>
+  <button class="mobile-nav-btn" data-panel="portfolio"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Портфолио</button>
 </div>
 
 <!-- HERO -->
@@ -326,7 +320,6 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
         <div class="step-tab" data-step="4"><div class="step-num-d">04</div><div class="step-lbl">Итог</div></div>
       </div>
 
-      <!-- S1 -->
       <div class="step-content active" data-content="1">
         <div class="field"><label>Выберите услугу</label><div class="services-grid" id="servicesGrid"></div></div>
         <div id="sizesGroup" class="field"><label>Размер работы</label><div class="sizes-row" id="sizesGrid"></div></div>
@@ -334,7 +327,6 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
         <button class="btn-primary" onclick="nextStep()">Далее →</button>
       </div>
 
-      <!-- S2 -->
       <div class="step-content" data-content="2">
         <div class="field"><label>Выберите дату</label><div class="calendar" id="calendar"></div></div>
         <div class="field"><label>Время сессии</label><div class="time-slots" id="timeSlots"></div></div>
@@ -343,7 +335,6 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
         <button class="btn-secondary" onclick="prevStep()">← Назад</button>
       </div>
 
-      <!-- S3 -->
       <div class="step-content" data-content="3">
         <div class="field-row">
           <div class="field"><label>Ваше имя</label><input type="text" id="clientName" placeholder="Имя"></div>
@@ -352,19 +343,25 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
         <div class="field"><label>Место нанесения</label>
           <select id="clientPlace"><option>Рука</option><option>Нога</option><option>Грудь</option><option>Спина</option><option>Шея</option><option>Другое</option></select>
         </div>
-        <div class="field"><label>Идея / описание / референсы</label><textarea id="clientIdea" placeholder="Опишите концепцию..."></textarea></div>
+        <div class="field"><label>Идея / описание / референсы</label>
+          <textarea id="clientIdea" placeholder="Опишите концепцию..."></textarea>
+        </div>
+        
+        <!-- MEDIA UPLOAD -->
+        <div class="media-upload-area">
+          <label class="media-upload-label"><span>📎 Прикрепить фото</span><input type="file" id="mediaInput" accept="image/*" multiple></label>
+          <div class="media-preview" id="mediaPreview"></div>
+        </div>
+        
         <p class="err-msg" id="err3"></p>
         <button class="btn-primary" onclick="nextStep()">Далее →</button>
         <button class="btn-secondary" onclick="prevStep()">← Назад</button>
       </div>
 
-      <!-- S4 -->
       <div class="step-content" data-content="4">
         <div class="field"><label>Проверьте данные</label><div class="summary-grid" id="summaryGrid"></div></div>
         <p class="err-msg" id="err4"></p>
-        <button class="btn-primary" id="submitBtn" onclick="submitBooking()">
-          Отправить заявку <span class="btn-loader" id="submitLoader"></span>
-        </button>
+        <button class="btn-primary" id="submitBtn" onclick="submitBooking()">Отправить заявку <span class="btn-loader" id="submitLoader"></span></button>
         <button class="btn-secondary" onclick="prevStep()">← Назад</button>
       </div>
     </div>
@@ -408,7 +405,7 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
 
 <footer>
   <div class="footer-logo">Mr. Chao</div>
-  <div class="footer-address">Точная локация придёт в сообщении после записи<br>Работаю по предварительной записи</div>
+  <div class="footer-address">📍 Хабаровск, ул. Ленинградская, 73Б<br>Точная локация придёт в сообщении после записи</div>
   <div class="footer-links">
     <a href="https://www.instagram.com/mmmister_chao?igsh=MWl3MHBlcnRicDV0bg==" target="_blank">Instagram</a>
     <a href="https://t.me/mchao_tattoo" target="_blank">Telegram</a>
@@ -424,20 +421,22 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const BOT_TOKEN     = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID       = '1085941747';
 const ADMIN_PASS    = 'chao123';
+const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
+const STUDIO_MAP_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ═══════════════════════════════
 // REALTIME SUBSCRIPTIONS
 // ═══════════════════════════════
 sb.channel('slots-realtime')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'slots' }, (payload) => {
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'slots' }, () => {
     renderCalendar();
     if (selDate) renderTimes();
   })
   .subscribe();
 
 sb.channel('bookings-realtime')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
     if (document.getElementById('panelAdmin').classList.contains('active')) {
       loadBookingsHistory();
     }
@@ -445,7 +444,7 @@ sb.channel('bookings-realtime')
   .subscribe();
 
 sb.channel('portfolio-realtime')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'portfolio' }, (payload) => {
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'portfolio' }, () => {
     loadPortfolio();
   })
   .subscribe();
@@ -457,6 +456,7 @@ let cStep=1, selSvc=null, selSz=null, selDate=null, selTime=null;
 let calMon=new Date(), bkSlots={};
 let tgUser=null, tgInfo='Гость', tgId=null;
 let allBk=[], portfolio=[];
+let mediaFiles = []; // массив base64 изображений
 const TIMES=['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 const SVCS=[{name:'Новая татуировка',price:'от 8 000 ₽'},{name:'Перекрытие',price:'от 10 000 ₽'},{name:'Доработка',price:'от 8 000 ₽'},{name:'Консультация',price:'Бесплатно'}];
 const SZS=['S (до 5 см)','M (5–12 см)','L (12–25 см)','XL (25+ см)'];
@@ -570,6 +570,39 @@ function renderTimes(){
 function pickTime(t){selTime=t;renderTimes();}
 
 // ═══════════════════════════════
+// MEDIA UPLOAD
+// ═══════════════════════════════
+document.getElementById('mediaInput').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      mediaFiles.push(ev.target.result);
+      renderMediaPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+function removeMedia(index) {
+  mediaFiles.splice(index, 1);
+  renderMediaPreview();
+}
+function renderMediaPreview() {
+  const container = document.getElementById('mediaPreview');
+  if (mediaFiles.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = mediaFiles.map((file, i) => `
+    <div class="media-item">
+      <img src="${file}">
+      <div class="media-remove" onclick="removeMedia(${i})">✕</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════
 // STEP NAV
 // ═══════════════════════════════
 function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
@@ -589,8 +622,9 @@ function updateSteps(){
 function renderSummary(){
   const mo=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const ds=selDate?`${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`:'—';
+  const mediaHtml = mediaFiles.length > 0 ? `<div class="summary-row"><span class="summary-key">Фото</span><span class="summary-val">${mediaFiles.length} файл(ов)</span></div>` : '';
   const rows=[['Услуга',selSvc?.name||'—'],['Размер',selSz||(selSvc?.name==='Консультация'?'—':'Не указан')],['Дата',ds],['Время',selTime||'—'],['Место нанесения',document.getElementById('clientPlace').value||'—'],['Стоимость',selSvc?.price||'—']];
-  document.getElementById('summaryGrid').innerHTML=rows.map(([k,v])=>`<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`).join('');
+  document.getElementById('summaryGrid').innerHTML=rows.map(([k,v])=>`<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`).join('') + mediaHtml;
 }
 
 // ═══════════════════════════════
@@ -606,17 +640,47 @@ async function submitBooking(){
   const dKey=selDate.toISOString().split('T')[0];
   const mo=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const ds=`${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`;
+  
   const{error:slotErr}=await sb.from('slots').insert([{date:dKey,time:selTime}]);
   if(slotErr){notify('❌ Слот занят — выберите другое время');btn.disabled=false;ldr.classList.remove('show');return;}
-  const{error:bkErr}=await sb.from('bookings').insert([{name,phone,service:selSvc?.name,size:selSz,price:selSvc?.price,date:selDate?.toISOString(),time:selTime,place,idea,tg_user:tgInfo,tg_user_id:tgId,status:'new'}]);
+  
+  const{error:bkErr}=await sb.from('bookings').insert([{name,phone,service:selSvc?.name,size:selSz,price:selSvc?.price,date:selDate?.toISOString(),time:selTime,place,idea,tg_user:tgInfo,tg_user_id:tgId,status:'new',media_files:mediaFiles}]);
   if(bkErr){notify('❌ Ошибка сохранения');btn.disabled=false;ldr.classList.remove('show');return;}
-  const msg=`🖤 НОВАЯ ЗАЯВКА — MR. CHAO TATTOO\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz||'—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea||'—'}`;
-  try{await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CHAT_ID,text:msg})});}catch(e){}
+  
+  const msgToMaster = `🖤 НОВАЯ ЗАЯВКА — MR. CHAO TATTOO 🖤\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz||'—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea||'—'}\n📎 Медиафайлов: ${mediaFiles.length}`;
+  try{await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CHAT_ID,text:msgToMaster})});}catch(e){}
+  
+  // Отправляем медиафайлы мастеру
+  for(let i=0;i<mediaFiles.length;i++){
+    try{
+      const blob = await (await fetch(mediaFiles[i])).blob();
+      const formData = new FormData();
+      formData.append('chat_id', CHAT_ID);
+      formData.append('photo', blob, `media_${i}.jpg`);
+      formData.append('caption', i===0 ? '📸 Медиафайлы клиента:' : '');
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
+    } catch(e){console.error('Error sending media:', e);}
+  }
+  
+  // Отправляем клиенту подтверждение с адресом и картой
+  const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${ds}\n⏰ ${selTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selSvc?.name}\n\n📍 Адрес студии: ${STUDIO_ADDRESS}\n🗺️ Карта: ${STUDIO_MAP_URL}\n\n⚠️ Если нужно отменить запись, напишите мастеру в Telegram: @mchao_tattoo`;
+  if(tgId){
+    try{
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: tgId, text: clientMessage })
+      });
+    } catch(e){console.error('Error sending confirmation to client:', e);}
+  }
+  
   notify('✅ Заявка отправлена!');
   resetForm();btn.disabled=false;ldr.classList.remove('show');
 }
 function resetForm(){
   selSvc=null;selSz=null;selDate=null;selTime=null;cStep=1;
+  mediaFiles = [];
+  renderMediaPreview();
   if(tgUser) document.getElementById('clientName').value=`${tgUser.first_name||''} ${tgUser.last_name||''}`.trim();
   else document.getElementById('clientName').value='';
   document.getElementById('clientPhone').value='';
@@ -672,7 +736,17 @@ function renderBkHistory(){
     return`<div class="admin-booking"><div><div class="aname">${b.name||'—'} · ${b.phone||'—'}</div><div class="adetails">${b.service||'—'} · ${b.size||'—'} · ${ds} ${b.time||''}<br>TG: ${b.tg_user||'—'}</div><div class="astatus ${stM[b.status]||'st-new'}">${stL[b.status]||'Новая'}</div></div>${b.status!=='cancelled'?`<button class="btn-sm" onclick="cancelBk('${b.id}')">Отменить</button>`:''}</div>`;
   }).join('');
 }
-async function cancelBk(id){await sb.from('bookings').update({status:'cancelled'}).eq('id',id);await loadBookingsHistory();notify('Запись отменена');}
+async function cancelBk(id){
+  // Получаем запись перед отменой
+  const {data: booking} = await sb.from('bookings').select('*').eq('id',id).single();
+  if(booking && booking.date && booking.time){
+    const dateKey = new Date(booking.date).toISOString().split('T')[0];
+    await sb.from('slots').delete().eq('date',dateKey).eq('time',booking.time);
+  }
+  await sb.from('bookings').update({status:'cancelled'}).eq('id',id);
+  await loadBookingsHistory();
+  notify('Запись отменена, слот освобождён');
+}
 
 // ═══════════════════════════════
 // ADMIN UNLOCK (15 кликов по логотипу)
