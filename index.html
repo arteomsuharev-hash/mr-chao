@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SKVERNA TATTOO</title>
+<title>MR. CHAO TATTOO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
@@ -43,6 +43,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content
 .nav-tab:last-child{border-right:1px solid var(--border)}
 .nav-tab.active,.nav-tab:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
 .user-badge{font-size:9px;letter-spacing:.25em;color:var(--silver);text-transform:uppercase;padding:.3rem .8rem;border:1px solid var(--border)}
+.admin-icon{background:transparent;border:1px solid var(--border2);color:var(--silver);padding:.3rem .8rem;font-size:9px;letter-spacing:.2em;cursor:none;transition:all .3s;border-radius:0;margin-left:.5rem}
+.admin-icon:hover{color:var(--accent);border-color:var(--accent)}
 
 /* HERO */
 .hero{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative;overflow:hidden}
@@ -227,8 +229,11 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
   .mobile-nav-btn.active,.mobile-nav-btn:hover{color:var(--accent)}
   .mobile-nav-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
   .panel{padding-bottom:6rem}
+  
+  /* Admin button on mobile */
+  .admin-mobile-btn{position:fixed;top:70px;right:10px;z-index:501;background:rgba(0,0,0,0.7);border:1px solid var(--accent);color:var(--accent);padding:8px 12px;font-size:10px;letter-spacing:.2em;cursor:pointer;backdrop-filter:blur(8px);font-family:var(--font-b);border-radius:0}
 }
-@media(min-width:701px){.mobile-nav{display:none}}
+@media(min-width:701px){.mobile-nav{display:none}.admin-mobile-btn{display:none}}
 </style>
 </head>
 <body>
@@ -238,7 +243,7 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
 
 <!-- NAV -->
 <nav>
-  <a href="#" class="nav-logo" id="navLogo">Skverna <em>Tattoo</em></a>
+  <a href="#" class="nav-logo" id="navLogo">Mr. <em>Chao</em> Tattoo</a>
   <div class="nav-tabs">
     <button class="nav-tab active" data-panel="hero">Главная</button>
     <button class="nav-tab" data-panel="about">Мастер</button>
@@ -248,6 +253,9 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
   </div>
   <div class="user-badge" id="userBadge">—</div>
 </nav>
+
+<!-- Admin button for mobile -->
+<button class="admin-mobile-btn" id="adminMobileBtn" style="display:none">⚡ ADMIN</button>
 
 <!-- MOBILE NAV -->
 <div class="mobile-nav">
@@ -276,8 +284,8 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
     <div class="hero-vline top"></div>
     <div class="hero-vline bottom"></div>
     <p class="hero-label">Авторская татуировка</p>
-    <h1 class="hero-title">Skverna<em>Tattoo</em></h1>
-    <p class="hero-sub">Один мастер · Каждая работа уникальна</p>
+    <h1 class="hero-title">Mr. Chao<em>Tattoo</em></h1>
+    <p class="hero-sub">Индивидуальный подход · Каждая работа уникальна</p>
     <button class="hero-cta" onclick="showPanel('booking')">Записаться <span>→</span></button>
     <div class="hero-scroll">Scroll</div>
   </section>
@@ -289,13 +297,13 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
     <div class="about-grid reveal">
       <div>
         <p class="section-label">Мастер</p>
-        <h2 class="section-title">Один мастер —<br><em>один результат</em></h2>
-        <p class="about-text">Skverna — авторская студия с единственным мастером. Никакого потока, никаких шаблонов. Каждая татуировка — от эскиза до финального результата — в одних руках.</p>
-        <p class="about-text">Работаю в стилях blackwork, fine line, ornamental. Разработка эскиза включена в стоимость. Приём по предварительной записи с внесением депозита.</p>
+        <h2 class="section-title">Mr. Chao —<br><em>графика и чёрный стиль</em></h2>
+        <p class="about-text">Занимаюсь татуировкой 5 лет. В основном работаю в стиле графика. Города Хабаровск-Владивосток.</p>
+        <p class="about-text">Работаю по предварительной записи, с внесением депозита. Бью татуировки как по вашим идеям, так и по своим эскизам. Разработка эскиза бесплатная.</p>
       </div>
       <div class="about-cards">
-        <div class="about-card"><span class="about-card-num">01</span><p class="about-card-label">Стиль</p><p class="about-card-val">Blackwork & Fine Line</p></div>
-        <div class="about-card"><span class="about-card-num">02</span><p class="about-card-label">Опыт</p><p class="about-card-val">7+ лет</p></div>
+        <div class="about-card"><span class="about-card-num">01</span><p class="about-card-label">Стиль</p><p class="about-card-val">Графика</p></div>
+        <div class="about-card"><span class="about-card-num">02</span><p class="about-card-label">Опыт</p><p class="about-card-val">5+ лет</p></div>
         <div class="about-card"><span class="about-card-num">03</span><p class="about-card-label">Сессия</p><p class="about-card-val">от 2 часов</p></div>
         <div class="about-card"><span class="about-card-num">04</span><p class="about-card-label">Эскиз</p><p class="about-card-val">Бесплатно</p></div>
       </div>
@@ -399,9 +407,12 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
 </div>
 
 <footer>
-  <div class="footer-logo">Skverna</div>
+  <div class="footer-logo">Mr. Chao</div>
   <div class="footer-address">Точная локация придёт в сообщении после записи<br>Работаю по предварительной записи</div>
-  <div class="footer-links"><a href="#">Instagram</a><a href="#">Telegram</a></div>
+  <div class="footer-links">
+    <a href="https://www.instagram.com/mmmister_chao?igsh=MWl3MHBlcnRicDV0bg==" target="_blank">Instagram</a>
+    <a href="https://t.me/mchao_tattoo" target="_blank">Telegram</a>
+  </div>
 </footer>
 
 <script>
@@ -414,6 +425,30 @@ const BOT_TOKEN     = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID       = '1085941747';
 const ADMIN_PASS    = 'chao123';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════
+// REALTIME SUBSCRIPTIONS
+// ═══════════════════════════════
+sb.channel('slots-realtime')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'slots' }, (payload) => {
+    renderCalendar();
+    if (selDate) renderTimes();
+  })
+  .subscribe();
+
+sb.channel('bookings-realtime')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
+    if (document.getElementById('panelAdmin').classList.contains('active')) {
+      loadBookingsHistory();
+    }
+  })
+  .subscribe();
+
+sb.channel('portfolio-realtime')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'portfolio' }, (payload) => {
+    loadPortfolio();
+  })
+  .subscribe();
 
 // ═══════════════════════════════
 // STATE
@@ -575,7 +610,7 @@ async function submitBooking(){
   if(slotErr){notify('❌ Слот занят — выберите другое время');btn.disabled=false;ldr.classList.remove('show');return;}
   const{error:bkErr}=await sb.from('bookings').insert([{name,phone,service:selSvc?.name,size:selSz,price:selSvc?.price,date:selDate?.toISOString(),time:selTime,place,idea,tg_user:tgInfo,tg_user_id:tgId,status:'new'}]);
   if(bkErr){notify('❌ Ошибка сохранения');btn.disabled=false;ldr.classList.remove('show');return;}
-  const msg=`🖤 НОВАЯ ЗАЯВКА — SKVERNA\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz||'—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea||'—'}`;
+  const msg=`🖤 НОВАЯ ЗАЯВКА — MR. CHAO TATTOO\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz||'—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea||'—'}`;
   try{await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CHAT_ID,text:msg})});}catch(e){}
   notify('✅ Заявка отправлена!');
   resetForm();btn.disabled=false;ldr.classList.remove('show');
@@ -647,9 +682,13 @@ document.getElementById('navLogo').addEventListener('click',e=>{
   e.preventDefault();clicks++;
   if(timer) clearTimeout(timer);
   timer=setTimeout(()=>{clicks=0;},900);
-  if(clicks>=15){clicks=0;clearTimeout(timer);const pwd=prompt('Пароль:');if(pwd===ADMIN_PASS){localStorage.setItem('isAdmin','1');document.getElementById('adminNavBtn').style.display='';notify('Админ активирован');}else if(pwd!==null) notify('Неверный пароль');}
+  if(clicks>=15){clicks=0;clearTimeout(timer);const pwd=prompt('Пароль:');if(pwd===ADMIN_PASS){localStorage.setItem('isAdmin','1');document.getElementById('adminNavBtn').style.display='';document.getElementById('adminMobileBtn').style.display='';notify('Админ активирован');}else if(pwd!==null) notify('Неверный пароль');}
 });
-if(localStorage.getItem('isAdmin')==='1') document.getElementById('adminNavBtn').style.display='';
+if(localStorage.getItem('isAdmin')==='1'){
+  document.getElementById('adminNavBtn').style.display='';
+  document.getElementById('adminMobileBtn').style.display='';
+}
+document.getElementById('adminMobileBtn').addEventListener('click',()=>showPanel('admin'));
 
 // ═══════════════════════════════
 // NOTIFY
