@@ -147,7 +147,6 @@ footer p:last-child{font-size:11px;}
 @media (min-width:1200px){
   .container{padding:40px;}
   .booking-card{padding:50px;}
-  .services-grid{grid-template-columns:repeat(4,1fr);}
 }
 .loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -322,32 +321,6 @@ const STUDIO_GEO_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.0763
 // ==================== POCKETBASE ====================
 const pb = new PocketBase(PB_URL);
 
-// ==================== КЭШ ДЛЯ ОПТИМИЗАЦИИ ====================
-let slotsCache = {};
-let calendarCache = null;
-let lastCalendarRender = 0;
-let isProcessingDate = false;
-let isProcessingBooking = false;
-
-// ==================== ЗАЩИТА ОТ DDoS ====================
-let requestCount = 0;
-let lastRequestReset = Date.now();
-const MAX_REQUESTS_PER_MINUTE = 30;
-
-function checkRateLimit() {
-  const now = Date.now();
-  if (now - lastRequestReset > 60000) {
-    requestCount = 0;
-    lastRequestReset = now;
-  }
-  if (requestCount >= MAX_REQUESTS_PER_MINUTE) {
-    showNotification('⚠️ Слишком много запросов. Подождите минуту.');
-    return false;
-  }
-  requestCount++;
-  return true;
-}
-
 // ==================== ГЛОБАЛЬНЫЕ ДАННЫЕ ====================
 let currentStep = 1;
 let selectedService = null;
@@ -360,40 +333,46 @@ let referenceImages = [];
 let tgUser = null;
 let tgUserInfo = '';
 let tgUserId = null;
+let isProcessing = false;
+let bookedSlotsCache = {};
 
-// ==================== РАБОТА С POCKETBASE (СЛОТЫ) С КЭШЕМ ====================
-async function loadAvailableSlots(date) {
-  if (!date) return [];
-  const dateKey = date.toISOString().split('T')[0];
-  
-  // Проверяем кэш (действителен 5 секунд)
-  if (slotsCache[dateKey] && (Date.now() - slotsCache[dateKey].timestamp) < 5000) {
-    return slotsCache[dateKey].slots;
-  }
+// ==================== РАБОТА С POCKETBASE ====================
+async function loadBookedSlotsForMonth(year, month) {
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
+  const startStr = startDate.toISOString().split('T')[0];
+  const endStr = endDate.toISOString().split('T')[0];
   
   try {
-    const result = await pb.collection('slots').getList(1, 100, {
-      filter: `date = "${dateKey}"`
+    const result = await pb.collection('slots').getList(1, 500, {
+      filter: `date >= "${startStr}" && date <= "${endStr}"`
     });
-    const allSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-    const bookedTimes = result.items.map(item => item.time);
-    const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot));
     
-    // Сохраняем в кэш
-    slotsCache[dateKey] = {
-      slots: availableSlots,
-      timestamp: Date.now()
-    };
-    
-    return availableSlots;
+    const booked = {};
+    result.items.forEach(item => {
+      if (!booked[item.date]) booked[item.date] = [];
+      booked[item.date].push(item.time);
+    });
+    return booked;
   } catch(e) {
-    console.error('Error loading slots:', e);
-    return [];
+    console.error('Error loading booked slots:', e);
+    return {};
+  }
+}
+
+async function isSlotAvailable(date, time) {
+  const dateKey = date.toISOString().split('T')[0];
+  try {
+    const result = await pb.collection('slots').getList(1, 1, {
+      filter: `date = "${dateKey}" && time = "${time}"`
+    });
+    return result.items.length === 0;
+  } catch(e) {
+    return true;
   }
 }
 
 async function bookSlot(date, time) {
-  if (!date || !time) return false;
   const dateKey = date.toISOString().split('T')[0];
   try {
     const existing = await pb.collection('slots').getList(1, 1, {
@@ -401,8 +380,6 @@ async function bookSlot(date, time) {
     });
     if (existing.items.length > 0) return false;
     await pb.collection('slots').create({ date: dateKey, time: time });
-    // Очищаем кэш для этой даты
-    delete slotsCache[dateKey];
     return true;
   } catch(e) {
     console.error('Error booking slot:', e);
@@ -411,7 +388,6 @@ async function bookSlot(date, time) {
 }
 
 async function releaseSlot(date, time) {
-  if (!date || !time) return;
   const dateKey = date.toISOString().split('T')[0];
   try {
     const existing = await pb.collection('slots').getList(1, 1, {
@@ -419,14 +395,12 @@ async function releaseSlot(date, time) {
     });
     if (existing.items.length > 0) {
       await pb.collection('slots').delete(existing.items[0].id);
-      delete slotsCache[dateKey];
     }
   } catch(e) {
     console.error('Error releasing slot:', e);
   }
 }
 
-// ==================== РАБОТА С POCKETBASE (ЗАПИСИ) ====================
 async function saveBookingToPB(bookingData) {
   try {
     const record = await pb.collection('bookings').create(bookingData);
@@ -439,9 +413,7 @@ async function saveBookingToPB(bookingData) {
 
 async function getAllBookingsFromPB() {
   try {
-    const result = await pb.collection('bookings').getList(1, 100, {
-      sort: '-created'
-    });
+    const result = await pb.collection('bookings').getList(1, 100, { sort: '-created' });
     return result.items;
   } catch(e) {
     console.error('Error loading bookings:', e);
@@ -464,12 +436,9 @@ async function cancelBookingInPB(bookingId) {
   }
 }
 
-// ==================== РАБОТА С POCKETBASE (ПОРТФОЛИО) ====================
 async function loadPortfolioFromPB() {
   try {
-    const result = await pb.collection('portfolio').getList(1, 100, {
-      sort: '-created'
-    });
+    const result = await pb.collection('portfolio').getList(1, 100, { sort: '-created' });
     return result.items;
   } catch(e) {
     console.error('Error loading portfolio:', e);
@@ -479,7 +448,6 @@ async function loadPortfolioFromPB() {
 
 async function addPortfolioItemToPB(title, imageBase64, desc) {
   try {
-    // Для base64 изображений нужно отправить как обычный текст
     const record = await pb.collection('portfolio').create({
       title: title,
       image: imageBase64,
@@ -552,14 +520,8 @@ async function addPortfolioItem() {
   const desc = document.getElementById('adminDesc').value.trim();
   const imageInput = document.getElementById('adminImageFile');
   
-  if (!title) { 
-    showNotification('❌ Введите название работы'); 
-    return; 
-  }
-  if (!imageInput.files || imageInput.files.length === 0) { 
-    showNotification('❌ Выберите фото'); 
-    return; 
-  }
+  if (!title) { showNotification('❌ Введите название работы'); return; }
+  if (!imageInput.files || imageInput.files.length === 0) { showNotification('❌ Выберите фото'); return; }
   
   const file = imageInput.files[0];
   const reader = new FileReader();
@@ -579,11 +541,7 @@ async function addPortfolioItem() {
       showNotification('❌ Ошибка добавления: ' + (err.message || 'неизвестная ошибка'));
     }
   };
-  
-  reader.onerror = function() {
-    showNotification('❌ Ошибка чтения файла');
-  };
-  
+  reader.onerror = () => showNotification('❌ Ошибка чтения файла');
   reader.readAsDataURL(file);
 }
 
@@ -603,13 +561,9 @@ document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
   const preview = document.getElementById('adminPreview');
   if (e.target.files && e.target.files[0]) {
     const reader = new FileReader();
-    reader.onload = function(ev) { 
-      preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--border)">`; 
-    };
+    reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--border)">`; };
     reader.readAsDataURL(e.target.files[0]);
-  } else {
-    preview.innerHTML = '';
-  }
+  } else preview.innerHTML = '';
 });
 
 document.getElementById('addPortfolioBtn')?.addEventListener('click', addPortfolioItem);
@@ -657,10 +611,7 @@ function renderBookingsHistory() {
 
 async function cancelBooking(bookingId) {
   const success = await cancelBookingInPB(bookingId);
-  if (!success) {
-    showNotification('❌ Запись уже отменена или не найдена');
-    return;
-  }
+  if (!success) { showNotification('❌ Запись уже отменена или не найдена'); return; }
   showNotification('✅ Запись отменена, слот освобождён');
   await refreshBookingsHistory();
   await renderCalendar();
@@ -668,8 +619,7 @@ async function cancelBooking(bookingId) {
 }
 
 // ==================== ВЫЗОВ АДМИНКИ ====================
-let clickCount = 0;
-let clickTimer = null;
+let clickCount = 0, clickTimer = null;
 document.getElementById('logo').addEventListener('click', () => {
   clickCount++;
   if (clickTimer) clearTimeout(clickTimer);
@@ -683,12 +633,10 @@ document.getElementById('logo').addEventListener('click', () => {
       showNotification('✅ Админ-панель активирована!');
       refreshBookingsHistory();
     } else if (pwd !== null) showNotification('❌ Неверный пароль');
-    if (clickTimer) clearTimeout(clickTimer);
+    clearTimeout(clickTimer);
   }
 });
-if (localStorage.getItem('isAdmin') === 'true') {
-  document.getElementById('adminNavBtn').style.display = 'block';
-}
+if (localStorage.getItem('isAdmin') === 'true') document.getElementById('adminNavBtn').style.display = 'block';
 
 // ==================== ТЕЛЕГРАМ ПОЛЬЗОВАТЕЛЬ ====================
 try {
@@ -704,15 +652,9 @@ try {
       tgUserInfo = username || fullName || 'Гость';
       document.getElementById('tgUsername').innerHTML = tgUserInfo;
       document.getElementById('clientName').value = fullName;
-    } else { 
-      document.getElementById('tgUsername').innerHTML = 'Гость'; 
-      tgUserInfo = 'Гость'; 
-    }
+    } else { document.getElementById('tgUsername').innerHTML = 'Гость'; tgUserInfo = 'Гость'; }
   }
-} catch(e) { 
-  document.getElementById('tgUsername').innerHTML = 'Гость'; 
-  tgUserInfo = 'Гость'; 
-}
+} catch(e) { document.getElementById('tgUsername').innerHTML = 'Гость'; tgUserInfo = 'Гость'; }
 
 // ==================== УСЛУГИ ====================
 const services = [
@@ -734,12 +676,8 @@ function selectService(index) {
   document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
   document.querySelector(`.service-card[data-service-index="${index}"]`).classList.add('selected');
   const sizesGroup = document.getElementById('sizesGroup');
-  if (selectedService.name === 'Консультация') { 
-    sizesGroup.style.display = 'none'; 
-    selectedSize = null; 
-  } else { 
-    sizesGroup.style.display = 'block'; 
-  }
+  if (selectedService.name === 'Консультация') { sizesGroup.style.display = 'none'; selectedSize = null; }
+  else sizesGroup.style.display = 'block';
 }
 
 function renderSizes() {
@@ -754,81 +692,51 @@ function selectSize(index) {
   document.querySelector(`.size-btn[data-size-index="${index}"]`).classList.add('selected');
 }
 
-// ==================== КАЛЕНДАРЬ (ОПТИМИЗИРОВАННЫЙ) ====================
+// ==================== КАЛЕНДАРЬ ====================
+let currentBookedSlots = {};
+
 async function renderCalendar() {
-  const now = Date.now();
-  if (now - lastCalendarRender < 500 && calendarCache) {
-    // Используем кэш если прошло меньше 500мс
-    const calendarEl = document.getElementById('calendar');
-    if (calendarEl && calendarCache === calendarEl.innerHTML) return;
-  }
-  
   const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = new Date(); today.setHours(0,0,0,0);
+  
+  currentBookedSlots = await loadBookedSlotsForMonth(year, month);
+  
   let html = `<div class="cal-header"><button class="cal-nav" onclick="prevMonth()">‹</button><div class="cal-month">${currentMonth.toLocaleString('ru',{month:'long',year:'numeric'}).toUpperCase()}</div><button class="cal-nav" onclick="nextMonth()">›</button></div><div class="cal-weekdays"><div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div>СБ</div><div>ВС</div></div><div class="cal-days">`;
   const startOffset = firstDay === 0 ? 6 : firstDay - 1;
   for (let i = 0; i < startOffset; i++) html += `<div class="cal-day disabled"></div>`;
   
-  // Загружаем слоты для всех дней месяца одним запросом (оптимизация)
-  const startDate = new Date(year, month, 1);
-  const endDate = new Date(year, month, daysInMonth);
-  const slotsPromises = [];
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
-    if (date >= today) {
-      slotsPromises.push(loadAvailableSlots(date));
-    }
-  }
-  const allSlotsResults = await Promise.all(slotsPromises);
-  
-  let slotIndex = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(year, month, d);
+    const dateKey = date.toISOString().split('T')[0];
     const isPast = date < today;
     const isToday = date.toDateString() === today.toDateString();
     const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
-    let hasFreeSlots = false;
-    if (!isPast) {
-      const availableSlots = allSlotsResults[slotIndex++];
-      hasFreeSlots = availableSlots.length > 0;
-    }
+    const bookedSlotsCount = currentBookedSlots[dateKey] ? currentBookedSlots[dateKey].length : 0;
+    const hasFreeSlots = !isPast && bookedSlotsCount < 10;
+    
     let cls = '';
     if (isPast) cls = 'disabled';
     else if (!hasFreeSlots) cls = 'booked';
     html += `<div class="cal-day ${cls} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="${!isPast && hasFreeSlots ? `selectDate(${year},${month},${d})` : ''}">${d}</div>`;
   }
   html += `</div>`;
-  const calendarEl = document.getElementById('calendar');
-  if (calendarEl) {
-    calendarEl.innerHTML = html;
-    calendarCache = html;
-    lastCalendarRender = Date.now();
-  }
+  document.getElementById('calendar').innerHTML = html;
 }
 
 async function selectDate(y,m,d) {
-  if (isProcessingDate) return;
-  isProcessingDate = true;
-  
+  if (isProcessing) return;
+  isProcessing = true;
   selectedDate = new Date(y,m,d);
   selectedTime = null;
   await renderCalendar();
   await renderTimeSlots();
-  
-  setTimeout(() => { isProcessingDate = false; }, 300);
+  setTimeout(() => { isProcessing = false; }, 500);
 }
 
-function prevMonth() { 
-  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1,1); 
-  renderCalendar(); 
-}
-
-function nextMonth() { 
-  currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1,1); 
-  renderCalendar(); 
-}
+function prevMonth() { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1,1); renderCalendar(); }
+function nextMonth() { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1,1); renderCalendar(); }
 
 const allTimeSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 
@@ -839,9 +747,10 @@ async function renderTimeSlots() {
     container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Сначала выберите дату</div>';
     return;
   }
-  const availableSlots = await loadAvailableSlots(selectedDate);
+  const dateKey = selectedDate.toISOString().split('T')[0];
+  const busySlots = currentBookedSlots[dateKey] || [];
   const slotsHtml = allTimeSlots.map(slot => {
-    const isAvailable = availableSlots.includes(slot);
+    const isAvailable = !busySlots.includes(slot);
     return `<div class="time-slot ${!isAvailable ? 'disabled' : ''} ${selectedTime === slot ? 'selected' : ''}" onclick="${isAvailable ? `selectTime('${slot}')` : ''}">${slot}</div>`;
   }).join('');
   container.innerHTML = slotsHtml;
@@ -857,25 +766,13 @@ function selectTime(slot) {
 function addReference() {
   const input = document.getElementById('refInput');
   const url = input.value.trim();
-  if (url && !references.includes(url)) { 
-    references.push(url); 
-    renderReferences(); 
-    input.value = ''; 
-  }
+  if (url && !references.includes(url)) { references.push(url); renderReferences(); input.value = ''; }
 }
-
-function removeReference(index) { 
-  references.splice(index,1); 
-  renderReferences(); 
-}
-
+function removeReference(index) { references.splice(index,1); renderReferences(); }
 function renderReferences() {
   const container = document.getElementById('refList');
   if (!container) return;
-  if (references.length === 0) { 
-    container.innerHTML = ''; 
-    return; 
-  }
+  if (references.length === 0) { container.innerHTML = ''; return; }
   container.innerHTML = references.map((ref,i) => `<div class="ref-item"><a href="${escapeHtml(ref)}" target="_blank">${escapeHtml(ref.length>40?ref.substring(0,40)+'...':ref)}</a><span class="ref-remove" onclick="removeReference(${i})">✕</span></div>`).join('');
 }
 
@@ -883,66 +780,33 @@ document.getElementById('photoInput')?.addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
   files.forEach(file => {
     const reader = new FileReader();
-    reader.onload = function(ev) { 
-      referenceImages.push(ev.target.result); 
-      renderPhotoPreview(); 
-    };
+    reader.onload = function(ev) { referenceImages.push(ev.target.result); renderPhotoPreview(); };
     reader.readAsDataURL(file);
   });
   e.target.value = '';
 });
-
-function removePhoto(index) { 
-  referenceImages.splice(index,1); 
-  renderPhotoPreview(); 
-}
-
+function removePhoto(index) { referenceImages.splice(index,1); renderPhotoPreview(); }
 function renderPhotoPreview() {
   const container = document.getElementById('photoPreview');
   if (!container) return;
-  if (referenceImages.length === 0) { 
-    container.innerHTML = ''; 
-    return; 
-  }
+  if (referenceImages.length === 0) { container.innerHTML = ''; return; }
   container.innerHTML = referenceImages.map((img,i) => `<div class="photo-item"><img src="${img}"><div class="photo-remove" onclick="removePhoto(${i})">✕</div></div>`).join('');
 }
 
-// ==================== НАВИГАЦИЯ ПО ШАГАМ ====================
+// ==================== НАВИГАЦИЯ ====================
 function updateStepsUI() {
-  document.querySelectorAll('.step').forEach((s,i) => { 
-    if(i+1 === currentStep) s.classList.add('active'); 
-    else s.classList.remove('active'); 
-  });
-  document.querySelectorAll('.step-content').forEach((c,i) => { 
-    if(i+1 === currentStep) c.classList.add('active'); 
-    else c.classList.remove('active'); 
-  });
+  document.querySelectorAll('.step').forEach((s,i) => { if(i+1 === currentStep) s.classList.add('active'); else s.classList.remove('active'); });
+  document.querySelectorAll('.step-content').forEach((c,i) => { if(i+1 === currentStep) c.classList.add('active'); else c.classList.remove('active'); });
 }
 
 function nextStep() {
-  if (currentStep === 1 && (!selectedService)) { 
-    document.getElementById('step1Error').innerHTML='Выберите услугу'; 
-    document.getElementById('step1Error').style.display='block'; 
-    return; 
-  }
-  if (currentStep === 1 && selectedService.name !== 'Консультация' && !selectedSize) { 
-    document.getElementById('step1Error').innerHTML='Выберите размер'; 
-    document.getElementById('step1Error').style.display='block'; 
-    return; 
-  }
-  if (currentStep === 2 && (!selectedDate || !selectedTime)) { 
-    document.getElementById('step2Error').innerHTML='Выберите дату и время'; 
-    document.getElementById('step2Error').style.display='block'; 
-    return; 
-  }
+  if (currentStep === 1 && (!selectedService)) { document.getElementById('step1Error').innerHTML='Выберите услугу'; document.getElementById('step1Error').style.display='block'; return; }
+  if (currentStep === 1 && selectedService.name !== 'Консультация' && !selectedSize) { document.getElementById('step1Error').innerHTML='Выберите размер'; document.getElementById('step1Error').style.display='block'; return; }
+  if (currentStep === 2 && (!selectedDate || !selectedTime)) { document.getElementById('step2Error').innerHTML='Выберите дату и время'; document.getElementById('step2Error').style.display='block'; return; }
   if (currentStep === 3) {
     const name = document.getElementById('clientName').value.trim();
     const phone = document.getElementById('clientPhone').value.trim();
-    if (!name || !phone) { 
-      document.getElementById('step3Error').innerHTML='Заполните имя и телефон'; 
-      document.getElementById('step3Error').style.display='block'; 
-      return; 
-    }
+    if (!name || !phone) { document.getElementById('step3Error').innerHTML='Заполните имя и телефон'; document.getElementById('step3Error').style.display='block'; return; }
     renderSummary();
   }
   document.querySelectorAll('.error').forEach(e=>e.style.display='none');
@@ -951,11 +815,7 @@ function nextStep() {
   window.scrollTo(0,0);
 }
 
-function prevStep() { 
-  currentStep--; 
-  updateStepsUI(); 
-  window.scrollTo(0,0); 
-}
+function prevStep() { currentStep--; updateStepsUI(); window.scrollTo(0,0); }
 
 function renderSummary() {
   const summary = document.getElementById('summary');
@@ -980,12 +840,8 @@ function renderSummary() {
 
 // ==================== ОТПРАВКА ЗАЯВКИ ====================
 async function submitBooking() {
-  if (!checkRateLimit()) return;
-  if (isProcessingBooking) {
-    showNotification('⏳ Подождите, предыдущая заявка ещё обрабатывается...');
-    return;
-  }
-  isProcessingBooking = true;
+  if (isProcessing) { showNotification('⏳ Подождите, предыдущая операция ещё выполняется...'); return; }
+  isProcessing = true;
   
   const name = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
@@ -994,40 +850,30 @@ async function submitBooking() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   
-  // Проверка слота с блокировкой
-  const availableSlots = await loadAvailableSlots(selectedDate);
-  if (!availableSlots.includes(selectedTime)) {
-    showNotification('❌ К сожалению, это время уже занято. Выберите другое.');
+  const available = await isSlotAvailable(selectedDate, selectedTime);
+  if (!available) {
+    showNotification('❌ Это время уже занято. Выберите другое.');
     await renderTimeSlots();
-    isProcessingBooking = false;
+    isProcessing = false;
     return;
   }
   
-  // Бронируем слот
   const booked = await bookSlot(selectedDate, selectedTime);
   if (!booked) {
     showNotification('❌ Не удалось забронировать слот. Попробуйте другое время.');
     await renderTimeSlots();
-    isProcessingBooking = false;
+    isProcessing = false;
     return;
   }
   
   const newBooking = {
-    name: name,
-    phone: phone,
-    service: selectedService?.name,
+    name, phone, service: selectedService?.name,
     size: selectedSize || (selectedService?.name === 'Консультация' ? 'Не требуется' : ''),
     price: selectedService?.price,
     date: selectedDate ? selectedDate.toISOString() : null,
-    time: selectedTime || null,
-    place: place || null,
-    idea: idea || null,
-    references: references,
-    referenceImages: referenceImages,
-    tgUser: tgUserInfo,
-    tgUserId: tgUserId,
-    status: 'new',
-    reminderSent: false
+    time: selectedTime || null, place: place || null, idea: idea || null,
+    references: references, referenceImages: referenceImages,
+    tgUser: tgUserInfo, tgUserId: tgUserId, status: 'new', reminderSent: false
   };
   
   const savedBooking = await saveBookingToPB(newBooking);
@@ -1051,13 +897,10 @@ async function submitBooking() {
     }
     
     const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${dateStr}\n⏰ ${selectedTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selectedService?.name}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\n⚠️ ВНИМАНИЕ: Слот забронирован. Если нужно отменить запись, нажмите кнопку ниже.`;
-    const keyboard = {
-      inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: JSON.stringify({ action: 'cancel', bookingId: savedBooking.id }) }]]
-    };
+    const keyboard = { inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: JSON.stringify({ action: 'cancel', bookingId: savedBooking.id }) }]] };
     if (tgUserId) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: tgUserId, text: clientMessage, reply_markup: keyboard })
       });
     }
@@ -1065,58 +908,31 @@ async function submitBooking() {
     showNotification('✅ Заявка отправлена! Слот забронирован.');
     resetForm();
     await refreshBookingsHistory();
-  } catch(e) { 
-    console.error(e); 
-    showNotification('❌ Ошибка отправки, но слот забронирован.'); 
-    btn.disabled = false; 
-    btn.innerHTML = 'ОТПРАВИТЬ'; 
-  }
-  isProcessingBooking = false;
+  } catch(e) { console.error(e); showNotification('❌ Ошибка отправки, но слот забронирован.'); }
+  btn.disabled = false;
+  btn.innerHTML = 'ОТПРАВИТЬ';
+  isProcessing = false;
 }
 
 function resetForm() {
-  selectedService = null; 
-  selectedSize = null; 
-  selectedDate = null; 
-  selectedTime = null;
-  references = []; 
-  referenceImages = []; 
-  currentStep = 1;
-  if(tgUser) {
-    document.getElementById('clientName').value = `${tgUser.first_name||''} ${tgUser.last_name||''}`.trim();
-  } else {
-    document.getElementById('clientName').value = '';
-  }
-  document.getElementById('clientPhone').value = ''; 
-  document.getElementById('clientPlace').value = '';
-  document.getElementById('clientIdea').value = ''; 
-  document.getElementById('refInput').value = '';
-  renderReferences(); 
-  renderPhotoPreview(); 
-  renderServices(); 
-  renderSizes(); 
-  renderCalendar(); 
-  renderTimeSlots(); 
-  updateStepsUI();
+  selectedService = null; selectedSize = null; selectedDate = null; selectedTime = null;
+  references = []; referenceImages = []; currentStep = 1;
+  if(tgUser) document.getElementById('clientName').value = `${tgUser.first_name||''} ${tgUser.last_name||''}`.trim();
+  else document.getElementById('clientName').value = '';
+  document.getElementById('clientPhone').value = ''; document.getElementById('clientPlace').value = '';
+  document.getElementById('clientIdea').value = ''; document.getElementById('refInput').value = '';
+  renderReferences(); renderPhotoPreview(); renderServices(); renderSizes(); renderCalendar(); renderTimeSlots(); updateStepsUI();
   const sizesGroup = document.getElementById('sizesGroup');
   if (sizesGroup) sizesGroup.style.display = 'block';
 }
 
-// ==================== УВЕДОМЛЕНИЯ ====================
 function showNotification(msg) {
-  const notif = document.createElement('div'); 
-  notif.className = 'notification'; 
-  notif.innerHTML = msg;
-  document.body.appendChild(notif); 
-  setTimeout(() => notif.remove(), 3000);
+  const notif = document.createElement('div'); notif.className = 'notification'; notif.innerHTML = msg;
+  document.body.appendChild(notif); setTimeout(() => notif.remove(), 3000);
 }
 
-function escapeHtml(str) { 
-  if(!str) return ''; 
-  return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); 
-}
+function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
-// ==================== НАВИГАЦИЯ ПАНЕЛЕЙ ====================
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const panel = btn.dataset.panel;
@@ -1125,16 +941,12 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     if(panel==='booking') document.getElementById('panelBooking').classList.add('active');
     if(panel==='portfolio') document.getElementById('panelPortfolio').classList.add('active');
-    if(panel==='admin') { 
-      document.getElementById('panelAdmin').classList.add('active'); 
-      refreshBookingsHistory(); 
-    }
+    if(panel==='admin') { document.getElementById('panelAdmin').classList.add('active'); refreshBookingsHistory(); }
   });
 });
 
 window.cancelBooking = cancelBooking;
 
-// ==================== НАПОМИНАНИЯ ====================
 async function checkReminders() {
   const now = new Date();
   const bookings = await getAllBookingsFromPB();
@@ -1148,12 +960,8 @@ async function checkReminders() {
         await pb.collection('bookings').update(booking.id, { reminderSent: true });
         if (booking.tgUserId) {
           await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              chat_id: booking.tgUserId, 
-              text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` 
-            })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: booking.tgUserId, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` })
           });
         }
       } catch(e) { console.error('Reminder error:', e); }
@@ -1163,7 +971,6 @@ async function checkReminders() {
 setInterval(checkReminders, 60 * 60 * 1000);
 checkReminders();
 
-// ==================== ИНИЦИАЛИЗАЦИЯ ====================
 async function init() {
   await refreshPortfolio();
   await refreshBookingsHistory();
