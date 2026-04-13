@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>MR. CHAO TATTOO | STUDIO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -311,15 +311,16 @@ footer p:last-child{font-size:11px;}
 
 <script>
 // ==================== КОНФИГУРАЦИЯ ====================
-const PB_URL = 'https://chao-3tl6.onrender.com';
+const SUPABASE_URL = 'https://roubmtdjygogvmpaxlpc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvdWJtdGRqeWdvZ3ZtcGF4bHBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzYyMzIsImV4cCI6MjA5MTY1MjIzMn0.CcJUnnVi7IFxpsBchUoQtB8UAsdpyuN7LiAc2Gff6eI';
 const BOT_TOKEN = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID = '1085941747';
 const ADMIN_PASSWORD = 'chao123';
 const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
 const STUDIO_GEO_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
 
-// ==================== POCKETBASE ====================
-const pb = new PocketBase(PB_URL);
+// ==================== SUPABASE ====================
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ==================== ГЛОБАЛЬНЫЕ ДАННЫЕ ====================
 let currentStep = 1;
@@ -334,147 +335,133 @@ let tgUser = null;
 let tgUserInfo = '';
 let tgUserId = null;
 let isProcessing = false;
-let bookedSlotsCache = {};
 
-// ==================== РАБОТА С POCKETBASE ====================
+// ==================== SUPABASE ФУНКЦИИ ====================
 async function loadBookedSlotsForMonth(year, month) {
   const startDate = new Date(year, month, 1);
   const endDate = new Date(year, month + 1, 0);
   const startStr = startDate.toISOString().split('T')[0];
   const endStr = endDate.toISOString().split('T')[0];
   
-  try {
-    const result = await pb.collection('slots').getList(1, 500, {
-      filter: `date >= "${startStr}" && date <= "${endStr}"`
-    });
-    
-    const booked = {};
-    result.items.forEach(item => {
-      if (!booked[item.date]) booked[item.date] = [];
-      booked[item.date].push(item.time);
-    });
-    return booked;
-  } catch(e) {
-    console.error('Error loading booked slots:', e);
+  const { data, error } = await supabase
+    .from('slots')
+    .select('*')
+    .gte('date', startStr)
+    .lte('date', endStr);
+  
+  if (error) {
+    console.error('Error loading slots:', error);
     return {};
   }
+  
+  const booked = {};
+  data.forEach(item => {
+    if (!booked[item.date]) booked[item.date] = [];
+    booked[item.date].push(item.time);
+  });
+  return booked;
 }
 
 async function isSlotAvailable(date, time) {
   const dateKey = date.toISOString().split('T')[0];
-  try {
-    const result = await pb.collection('slots').getList(1, 1, {
-      filter: `date = "${dateKey}" && time = "${time}"`
-    });
-    return result.items.length === 0;
-  } catch(e) {
-    return true;
-  }
+  const { data, error } = await supabase
+    .from('slots')
+    .select('*')
+    .eq('date', dateKey)
+    .eq('time', time);
+  
+  if (error) return true;
+  return data.length === 0;
 }
 
 async function bookSlot(date, time) {
   const dateKey = date.toISOString().split('T')[0];
-  try {
-    const existing = await pb.collection('slots').getList(1, 1, {
-      filter: `date = "${dateKey}" && time = "${time}"`
-    });
-    if (existing.items.length > 0) return false;
-    await pb.collection('slots').create({ date: dateKey, time: time });
-    return true;
-  } catch(e) {
-    console.error('Error booking slot:', e);
-    return false;
-  }
+  const { error } = await supabase
+    .from('slots')
+    .insert([{ date: dateKey, time: time }]);
+  
+  return !error;
 }
 
 async function releaseSlot(date, time) {
   const dateKey = date.toISOString().split('T')[0];
-  try {
-    const existing = await pb.collection('slots').getList(1, 1, {
-      filter: `date = "${dateKey}" && time = "${time}"`
-    });
-    if (existing.items.length > 0) {
-      await pb.collection('slots').delete(existing.items[0].id);
-    }
-  } catch(e) {
-    console.error('Error releasing slot:', e);
-  }
+  await supabase
+    .from('slots')
+    .delete()
+    .eq('date', dateKey)
+    .eq('time', time);
 }
 
-async function saveBookingToPB(bookingData) {
-  try {
-    const record = await pb.collection('bookings').create(bookingData);
-    return record;
-  } catch(e) {
-    console.error('Error saving booking:', e);
-    throw e;
-  }
+async function saveBookingToSupabase(bookingData) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert([bookingData])
+    .select();
+  
+  if (error) throw error;
+  return data[0];
 }
 
-async function getAllBookingsFromPB() {
-  try {
-    const result = await pb.collection('bookings').getList(1, 100, { sort: '-created' });
-    return result.items;
-  } catch(e) {
-    console.error('Error loading bookings:', e);
-    return [];
-  }
+async function getAllBookingsFromSupabase() {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) return [];
+  return data;
 }
 
-async function cancelBookingInPB(bookingId) {
-  try {
-    const booking = await pb.collection('bookings').getOne(bookingId);
-    if (booking.status === 'cancelled') return false;
-    await pb.collection('bookings').update(bookingId, { status: 'cancelled' });
-    if (booking.date && booking.time) {
-      await releaseSlot(new Date(booking.date), booking.time);
-    }
-    return true;
-  } catch(e) {
-    console.error('Error cancelling booking:', e);
-    return false;
+async function cancelBookingInSupabase(bookingId) {
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', bookingId)
+    .single();
+  
+  if (!booking || booking.status === 'cancelled') return false;
+  
+  await supabase
+    .from('bookings')
+    .update({ status: 'cancelled' })
+    .eq('id', bookingId);
+  
+  if (booking.date && booking.time) {
+    await releaseSlot(new Date(booking.date), booking.time);
   }
+  return true;
 }
 
-async function loadPortfolioFromPB() {
-  try {
-    const result = await pb.collection('portfolio').getList(1, 100, { sort: '-created' });
-    return result.items;
-  } catch(e) {
-    console.error('Error loading portfolio:', e);
-    return [];
-  }
+async function loadPortfolioFromSupabase() {
+  const { data, error } = await supabase
+    .from('portfolio')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) return [];
+  return data;
 }
 
-async function addPortfolioItemToPB(title, imageBase64, desc) {
-  try {
-    const record = await pb.collection('portfolio').create({
-      title: title,
-      image: imageBase64,
-      desc: desc
-    });
-    return record;
-  } catch(e) {
-    console.error('Error adding portfolio item:', e);
-    throw e;
-  }
+async function addPortfolioItemToSupabase(title, imageBase64, desc) {
+  const { error } = await supabase
+    .from('portfolio')
+    .insert([{ title: title, image: imageBase64, description: desc }]);
+  
+  if (error) throw error;
 }
 
-async function deletePortfolioItemFromPB(itemId) {
-  try {
-    await pb.collection('portfolio').delete(itemId);
-    return true;
-  } catch(e) {
-    console.error('Error deleting portfolio item:', e);
-    throw e;
-  }
+async function deletePortfolioItemFromSupabase(itemId) {
+  await supabase
+    .from('portfolio')
+    .delete()
+    .eq('id', itemId);
 }
 
-// ==================== ПОРТФОЛИО (UI) ====================
+// ==================== ПОРТФОЛИО ====================
 let portfolio = [];
 
 async function refreshPortfolio() {
-  portfolio = await loadPortfolioFromPB();
+  portfolio = await loadPortfolioFromSupabase();
   renderPortfolio();
   renderAdminPortfolio();
 }
@@ -491,7 +478,7 @@ function renderPortfolio() {
       <img class="portfolio-img" src="${escapeHtml(item.image)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=ERROR'">
       <div class="portfolio-info">
         <div class="portfolio-title">${escapeHtml(item.title)}</div>
-        <div class="portfolio-desc">${escapeHtml(item.desc)}</div>
+        <div class="portfolio-desc">${escapeHtml(item.description || '')}</div>
       </div>
     </div>
   `).join('');
@@ -508,7 +495,7 @@ function renderAdminPortfolio() {
     <div class="portfolio-admin-item">
       <div class="portfolio-admin-info">
         <div class="portfolio-admin-title">${escapeHtml(item.title)}</div>
-        <div class="portfolio-admin-desc">${escapeHtml(item.desc)}</div>
+        <div class="portfolio-admin-desc">${escapeHtml(item.description || '')}</div>
       </div>
       <button class="delete-btn" onclick="deletePortfolioItem('${item.id}')">УДАЛИТЬ</button>
     </div>
@@ -529,7 +516,7 @@ async function addPortfolioItem() {
   reader.onload = async function(e) {
     try {
       showNotification('⏳ Добавление...');
-      await addPortfolioItemToPB(title, e.target.result, desc);
+      await addPortfolioItemToSupabase(title, e.target.result, desc);
       await refreshPortfolio();
       document.getElementById('adminTitle').value = '';
       document.getElementById('adminDesc').value = '';
@@ -548,7 +535,7 @@ async function addPortfolioItem() {
 async function deletePortfolioItem(itemId) {
   if (confirm('Удалить эту работу из портфолио?')) {
     try {
-      await deletePortfolioItemFromPB(itemId);
+      await deletePortfolioItemFromSupabase(itemId);
       await refreshPortfolio();
       showNotification('✅ Работа удалена');
     } catch(err) {
@@ -572,7 +559,7 @@ document.getElementById('addPortfolioBtn')?.addEventListener('click', addPortfol
 let allBookings = [];
 
 async function refreshBookingsHistory() {
-  allBookings = await getAllBookingsFromPB();
+  allBookings = await getAllBookingsFromSupabase();
   renderBookingsHistory();
 }
 
@@ -601,7 +588,7 @@ function renderBookingsHistory() {
               <td>${escapeHtml(b.service)}<br><small style="color:#666">${b.size || ''}</small></td>
               <td><span class="status ${statusClass}">${statusText}</span></td>
               <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking('${b.id}')">ОТМЕНИТЬ</button>` : '—'}</td>
-            </tr>`;
+            <tr>`;
           }).join('')}
         </tbody>
       </table>
@@ -610,7 +597,7 @@ function renderBookingsHistory() {
 }
 
 async function cancelBooking(bookingId) {
-  const success = await cancelBookingInPB(bookingId);
+  const success = await cancelBookingInSupabase(bookingId);
   if (!success) { showNotification('❌ Запись уже отменена или не найдена'); return; }
   showNotification('✅ Запись отменена, слот освобождён');
   await refreshBookingsHistory();
@@ -872,11 +859,11 @@ async function submitBooking() {
     price: selectedService?.price,
     date: selectedDate ? selectedDate.toISOString() : null,
     time: selectedTime || null, place: place || null, idea: idea || null,
-    references: references, referenceImages: referenceImages,
-    tgUser: tgUserInfo, tgUserId: tgUserId, status: 'new', reminderSent: false
+    ref_links: references, ref_images: referenceImages,
+    tg_user: tgUserInfo, tg_user_id: tgUserId, status: 'new', reminder_sent: false
   };
   
-  const savedBooking = await saveBookingToPB(newBooking);
+  const savedBooking = await saveBookingToSupabase(newBooking);
   
   let message = `🖤 НОВАЯ ЗАЯВКА НА ТАТУ 🖤\n\n📋 Услуга: ${selectedService?.name}\n📐 Размер: ${selectedSize||(selectedService?.name==='Консультация'?'Не требуется':'—')}\n💰 Стоимость: ${selectedService?.price}\n\n📅 Дата: ${dateStr}\n⏰ Время: ${selectedTime||'—'}\n📍 Место: ${place||'Не указано'}\n\n👤 Клиент: ${name}\n📞 Телефон: ${phone}\n✈️ Telegram: ${tgUserInfo}\n\n💬 Идея: ${idea||'Не указано'}`;
   if (references.length > 0) message += `\n\n📎 Ссылки-референсы:\n${references.join('\n')}`;
@@ -949,19 +936,19 @@ window.cancelBooking = cancelBooking;
 
 async function checkReminders() {
   const now = new Date();
-  const bookings = await getAllBookingsFromPB();
+  const bookings = await getAllBookingsFromSupabase();
   for (const booking of bookings) {
     if (booking.status === 'cancelled') continue;
     if (!booking.date) continue;
     const bookingDate = new Date(booking.date);
     const diffDays = Math.ceil((bookingDate - now) / (1000 * 60 * 60 * 24));
-    if (diffDays === 1 && !booking.reminderSent) {
+    if (diffDays === 1 && !booking.reminder_sent) {
       try {
-        await pb.collection('bookings').update(booking.id, { reminderSent: true });
-        if (booking.tgUserId) {
+        await supabase.from('bookings').update({ reminder_sent: true }).eq('id', booking.id);
+        if (booking.tg_user_id) {
           await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: booking.tgUserId, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` })
+            body: JSON.stringify({ chat_id: booking.tg_user_id, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` })
           });
         }
       } catch(e) { console.error('Reminder error:', e); }
