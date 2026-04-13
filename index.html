@@ -456,7 +456,7 @@ let cStep=1, selSvc=null, selSz=null, selDate=null, selTime=null;
 let calMon=new Date(), bkSlots={};
 let tgUser=null, tgInfo='Гость', tgId=null;
 let allBk=[], portfolio=[];
-let mediaFiles = []; // массив base64 изображений
+let mediaFiles = [];
 const TIMES=['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 const SVCS=[{name:'Новая татуировка',price:'от 8 000 ₽'},{name:'Перекрытие',price:'от 10 000 ₽'},{name:'Доработка',price:'от 8 000 ₽'},{name:'Консультация',price:'Бесплатно'}];
 const SZS=['S (до 5 см)','M (5–12 см)','L (12–25 см)','XL (25+ см)'];
@@ -628,55 +628,127 @@ function renderSummary(){
 }
 
 // ═══════════════════════════════
-// SUBMIT
+// SUBMIT (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 // ═══════════════════════════════
-async function submitBooking(){
-  const btn=document.getElementById('submitBtn'),ldr=document.getElementById('submitLoader');
-  btn.disabled=true;ldr.classList.add('show');
-  const name=document.getElementById('clientName').value.trim();
-  const phone=document.getElementById('clientPhone').value.trim();
-  const place=document.getElementById('clientPlace').value;
-  const idea=document.getElementById('clientIdea').value;
-  const dKey=selDate.toISOString().split('T')[0];
-  const mo=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  const ds=`${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`;
+async function submitBooking() {
+  const btn = document.getElementById('submitBtn');
+  const ldr = document.getElementById('submitLoader');
+  btn.disabled = true;
+  ldr.classList.add('show');
   
-  const{error:slotErr}=await sb.from('slots').insert([{date:dKey,time:selTime}]);
-  if(slotErr){notify('❌ Слот занят — выберите другое время');btn.disabled=false;ldr.classList.remove('show');return;}
+  const name = document.getElementById('clientName').value.trim();
+  const phone = document.getElementById('clientPhone').value.trim();
+  const place = document.getElementById('clientPlace').value;
+  const idea = document.getElementById('clientIdea').value;
+  const dKey = selDate.toISOString().split('T')[0];
+  const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const ds = `${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`;
   
-  const{error:bkErr}=await sb.from('bookings').insert([{name,phone,service:selSvc?.name,size:selSz,price:selSvc?.price,date:selDate?.toISOString(),time:selTime,place,idea,tg_user:tgInfo,tg_user_id:tgId,status:'new',media_files:mediaFiles}]);
-  if(bkErr){notify('❌ Ошибка сохранения');btn.disabled=false;ldr.classList.remove('show');return;}
+  // 1. Атомарная проверка: существует ли уже такой слот?
+  const { data: existing, error: checkErr } = await sb
+    .from('slots')
+    .select('*')
+    .eq('date', dKey)
+    .eq('time', selTime);
   
-  const msgToMaster = `🖤 НОВАЯ ЗАЯВКА — MR. CHAO TATTOO 🖤\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz||'—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea||'—'}\n📎 Медиафайлов: ${mediaFiles.length}`;
-  try{await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:CHAT_ID,text:msgToMaster})});}catch(e){}
+  if (checkErr) {
+    console.error('Check error:', checkErr);
+    notify('❌ Ошибка проверки слота');
+    btn.disabled = false;
+    ldr.classList.remove('show');
+    return;
+  }
   
-  // Отправляем медиафайлы мастеру
-  for(let i=0;i<mediaFiles.length;i++){
-    try{
+  if (existing && existing.length > 0) {
+    notify('❌ Это время уже занято. Выберите другое.');
+    btn.disabled = false;
+    ldr.classList.remove('show');
+    return;
+  }
+  
+  // 2. Вставляем слот
+  const { error: slotErr } = await sb
+    .from('slots')
+    .insert([{ date: dKey, time: selTime }]);
+  
+  if (slotErr) {
+    if (slotErr.code === '23505') {
+      notify('❌ Это время уже занято. Выберите другое.');
+    } else {
+      console.error('Slot insert error:', slotErr);
+      notify('❌ Ошибка бронирования слота');
+    }
+    btn.disabled = false;
+    ldr.classList.remove('show');
+    return;
+  }
+  
+  // 3. Сохраняем запись
+  const { error: bookingErr } = await sb
+    .from('bookings')
+    .insert([{
+      name, phone,
+      service: selSvc?.name,
+      size: selSz,
+      price: selSvc?.price,
+      date: selDate?.toISOString(),
+      time: selTime,
+      place, idea,
+      tg_user: tgInfo,
+      tg_user_id: tgId,
+      status: 'new'
+    }]);
+  
+  if (bookingErr) {
+    console.error('Booking insert error:', bookingErr);
+    notify('❌ Ошибка сохранения записи');
+    // Откатываем слот
+    await sb.from('slots').delete().eq('date', dKey).eq('time', selTime);
+    btn.disabled = false;
+    ldr.classList.remove('show');
+    return;
+  }
+  
+  // 4. Отправляем мастеру
+  const msgToMaster = `🖤 НОВАЯ ЗАЯВКА — MR. CHAO TATTOO 🖤\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz || '—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea || '—'}\n📎 Медиафайлов: ${mediaFiles.length}`;
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msgToMaster })
+    });
+  } catch(e) { console.error('Error sending to master:', e); }
+  
+  // 5. Отправляем медиа мастеру
+  for (let i = 0; i < mediaFiles.length; i++) {
+    try {
       const blob = await (await fetch(mediaFiles[i])).blob();
       const formData = new FormData();
       formData.append('chat_id', CHAT_ID);
       formData.append('photo', blob, `media_${i}.jpg`);
-      formData.append('caption', i===0 ? '📸 Медиафайлы клиента:' : '');
+      formData.append('caption', i === 0 ? '📸 Медиафайлы клиента:' : '');
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-    } catch(e){console.error('Error sending media:', e);}
+    } catch(e) { console.error('Error sending media:', e); }
   }
   
-  // Отправляем клиенту подтверждение с адресом и картой
-  const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${ds}\n⏰ ${selTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selSvc?.name}\n\n📍 Адрес студии: ${STUDIO_ADDRESS}\n🗺️ Карта: ${STUDIO_MAP_URL}\n\n⚠️ Если нужно отменить запись, напишите мастеру в Telegram: @mchao_tattoo`;
-  if(tgId){
-    try{
+  // 6. Отправляем клиенту подтверждение с адресом
+  if (tgId) {
+    const clientMsg = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${ds}\n⏰ ${selTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selSvc?.name}\n\n📍 Адрес студии: ${STUDIO_ADDRESS}\n🗺️ Карта: ${STUDIO_MAP_URL}\n\n⚠️ Если нужно отменить запись, напишите мастеру в Telegram: @mchao_tattoo`;
+    try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: tgId, text: clientMessage })
+        body: JSON.stringify({ chat_id: tgId, text: clientMsg })
       });
-    } catch(e){console.error('Error sending confirmation to client:', e);}
+    } catch(e) { console.error('Error sending to client:', e); }
   }
   
   notify('✅ Заявка отправлена!');
-  resetForm();btn.disabled=false;ldr.classList.remove('show');
+  resetForm();
+  btn.disabled = false;
+  ldr.classList.remove('show');
 }
+
 function resetForm(){
   selSvc=null;selSz=null;selDate=null;selTime=null;cStep=1;
   mediaFiles = [];
@@ -737,7 +809,6 @@ function renderBkHistory(){
   }).join('');
 }
 async function cancelBk(id){
-  // Получаем запись перед отменой
   const {data: booking} = await sb.from('bookings').select('*').eq('id',id).single();
   if(booking && booking.date && booking.time){
     const dateKey = new Date(booking.date).toISOString().split('T')[0];
