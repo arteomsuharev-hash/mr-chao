@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>MR. CHAO TATTOO | STUDIO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -306,12 +307,15 @@ footer p:last-child{font-size:11px;}
 
 <script>
 // ==================== КОНФИГУРАЦИЯ ====================
+const PB_URL = 'https://chao-3tl6.onrender.com';
 const BOT_TOKEN = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID = '1085941747';
-const ADMIN_CLICK_COUNT = 15;
 const ADMIN_PASSWORD = 'chao123';
 const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
 const STUDIO_GEO_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
+
+// ==================== POCKETBASE ====================
+const pb = new PocketBase(PB_URL);
 
 // ==================== ЗАЩИТА ОТ DDoS ====================
 let requestCount = 0;
@@ -345,110 +349,214 @@ let tgUser = null;
 let tgUserInfo = '';
 let tgUserId = null;
 
-// ==================== БРОНИРОВАНИЕ СЛОТОВ ====================
-let bookedSlots = {};
-
-function loadBookedSlots() {
-  const saved = localStorage.getItem('tattoo_booked_slots');
-  if (saved) {
-    bookedSlots = JSON.parse(saved);
-  } else {
-    bookedSlots = {};
+// ==================== РАБОТА С POCKETBASE ====================
+async function loadAvailableSlots(date) {
+  if (!date) return [];
+  const dateKey = date.toISOString().split('T')[0];
+  try {
+    const result = await pb.collection('slots').getList(1, 100, {
+      filter: `date = "${dateKey}"`
+    });
+    const allSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+    const bookedTimes = result.items.map(item => item.time);
+    return allSlots.filter(slot => !bookedTimes.includes(slot));
+  } catch(e) {
+    console.error('Error loading slots:', e);
+    return [];
   }
 }
 
-function saveBookedSlots() {
-  localStorage.setItem('tattoo_booked_slots', JSON.stringify(bookedSlots));
-  window.dispatchEvent(new StorageEvent('storage', { key: 'tattoo_booked_slots', newValue: JSON.stringify(bookedSlots) }));
-}
-
-function isSlotAvailable(date, time) {
+async function bookSlot(date, time) {
   if (!date || !time) return false;
   const dateKey = date.toISOString().split('T')[0];
-  const busySlots = bookedSlots[dateKey] || [];
-  return !busySlots.includes(time);
-}
-
-function bookSlot(date, time) {
-  if (!date || !time) return false;
-  const dateKey = date.toISOString().split('T')[0];
-  if (!bookedSlots[dateKey]) bookedSlots[dateKey] = [];
-  if (!bookedSlots[dateKey].includes(time)) {
-    bookedSlots[dateKey].push(time);
-    saveBookedSlots();
+  try {
+    const existing = await pb.collection('slots').getList(1, 1, {
+      filter: `date = "${dateKey}" && time = "${time}"`
+    });
+    if (existing.items.length > 0) return false;
+    await pb.collection('slots').create({ date: dateKey, time: time });
     return true;
+  } catch(e) {
+    console.error('Error booking slot:', e);
+    return false;
   }
-  return false;
 }
 
-function releaseSlot(date, time) {
+async function releaseSlot(date, time) {
   if (!date || !time) return;
   const dateKey = date.toISOString().split('T')[0];
-  if (bookedSlots[dateKey]) {
-    const index = bookedSlots[dateKey].indexOf(time);
-    if (index !== -1) bookedSlots[dateKey].splice(index, 1);
-    if (bookedSlots[dateKey].length === 0) delete bookedSlots[dateKey];
-    saveBookedSlots();
+  try {
+    const existing = await pb.collection('slots').getList(1, 1, {
+      filter: `date = "${dateKey}" && time = "${time}"`
+    });
+    if (existing.items.length > 0) {
+      await pb.collection('slots').delete(existing.items[0].id);
+    }
+  } catch(e) {
+    console.error('Error releasing slot:', e);
   }
 }
 
-// ==================== ВСЕ ЗАПИСИ (ИСТОРИЯ) ====================
+async function saveBookingToPB(bookingData) {
+  try {
+    const record = await pb.collection('bookings').create(bookingData);
+    return record;
+  } catch(e) {
+    console.error('Error saving booking:', e);
+    throw e;
+  }
+}
+
+async function getAllBookingsFromPB() {
+  try {
+    const result = await pb.collection('bookings').getList(1, 100, {
+      sort: '-created'
+    });
+    return result.items;
+  } catch(e) {
+    console.error('Error loading bookings:', e);
+    return [];
+  }
+}
+
+async function cancelBookingInPB(bookingId) {
+  try {
+    const booking = await pb.collection('bookings').getOne(bookingId);
+    if (booking.status === 'cancelled') return false;
+    await pb.collection('bookings').update(bookingId, { status: 'cancelled' });
+    if (booking.date && booking.time) {
+      await releaseSlot(new Date(booking.date), booking.time);
+    }
+    return true;
+  } catch(e) {
+    console.error('Error cancelling booking:', e);
+    return false;
+  }
+}
+
+async function loadPortfolioFromPB() {
+  try {
+    const result = await pb.collection('portfolio').getList(1, 100, {
+      sort: '-created'
+    });
+    return result.items;
+  } catch(e) {
+    console.error('Error loading portfolio:', e);
+    return [];
+  }
+}
+
+async function addPortfolioItemToPB(title, imageBase64, desc) {
+  try {
+    await pb.collection('portfolio').create({
+      title: title,
+      image: imageBase64,
+      desc: desc
+    });
+  } catch(e) {
+    console.error('Error adding portfolio item:', e);
+    throw e;
+  }
+}
+
+async function deletePortfolioItemFromPB(itemId) {
+  try {
+    await pb.collection('portfolio').delete(itemId);
+  } catch(e) {
+    console.error('Error deleting portfolio item:', e);
+    throw e;
+  }
+}
+
+// ==================== ПОРТФОЛИО ====================
+let portfolio = [];
+
+async function refreshPortfolio() {
+  portfolio = await loadPortfolioFromPB();
+  renderPortfolio();
+  renderAdminPortfolio();
+}
+
+function renderPortfolio() {
+  const grid = document.getElementById('portfolioGrid');
+  if (!grid) return;
+  if (portfolio.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Портфолио пополняется...</div>';
+    return;
+  }
+  grid.innerHTML = portfolio.map(item => `
+    <div class="portfolio-item">
+      <img class="portfolio-img" src="${escapeHtml(item.image)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=ERROR'">
+      <div class="portfolio-info">
+        <div class="portfolio-title">${escapeHtml(item.title)}</div>
+        <div class="portfolio-desc">${escapeHtml(item.desc)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminPortfolio() {
+  const list = document.getElementById('adminPortfolioList');
+  if (!list) return;
+  if (portfolio.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Нет работ</div>';
+    return;
+  }
+  list.innerHTML = portfolio.map((item, idx) => `
+    <div class="portfolio-admin-item">
+      <div class="portfolio-admin-info">
+        <div class="portfolio-admin-title">${escapeHtml(item.title)}</div>
+        <div class="portfolio-admin-desc">${escapeHtml(item.desc)}</div>
+      </div>
+      <button class="delete-btn" onclick="deletePortfolioItem(${idx})">УДАЛИТЬ</button>
+    </div>
+  `).join('');
+}
+
+async function addPortfolioItem() {
+  const title = document.getElementById('adminTitle').value.trim();
+  const desc = document.getElementById('adminDesc').value.trim();
+  const imageInput = document.getElementById('adminImageFile');
+  if (!title) { showNotification('Введите название'); return; }
+  if (!imageInput.files || imageInput.files.length === 0) { showNotification('Выберите фото'); return; }
+  const file = imageInput.files[0];
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    await addPortfolioItemToPB(title, e.target.result, desc);
+    await refreshPortfolio();
+    document.getElementById('adminTitle').value = '';
+    document.getElementById('adminDesc').value = '';
+    document.getElementById('adminImageFile').value = '';
+    document.getElementById('adminPreview').innerHTML = '';
+    showNotification('Работа добавлена!');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function deletePortfolioItem(index) {
+  const item = portfolio[index];
+  if (item && item.id) {
+    await deletePortfolioItemFromPB(item.id);
+    await refreshPortfolio();
+    showNotification('Работа удалена');
+  }
+}
+
+document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
+  const preview = document.getElementById('adminPreview');
+  if (e.target.files && e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(ev) { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--border)">`; };
+    reader.readAsDataURL(e.target.files[0]);
+  } else preview.innerHTML = '';
+});
+
+// ==================== ИСТОРИЯ ЗАПИСЕЙ ====================
 let allBookings = [];
 
-function loadAllBookings() {
-  const saved = localStorage.getItem('tattoo_all_bookings');
-  allBookings = saved ? JSON.parse(saved) : [];
+async function refreshBookingsHistory() {
+  allBookings = await getAllBookingsFromPB();
   renderBookingsHistory();
-}
-
-function saveAllBookings() {
-  localStorage.setItem('tattoo_all_bookings', JSON.stringify(allBookings));
-  renderBookingsHistory();
-  window.dispatchEvent(new StorageEvent('storage', { key: 'tattoo_all_bookings', newValue: JSON.stringify(allBookings) }));
-}
-
-function addBooking(booking) {
-  allBookings.unshift(booking);
-  saveAllBookings();
-}
-
-async function cancelBooking(bookingId, source = 'admin') {
-  const booking = allBookings.find(b => b.id === bookingId);
-  if (!booking) {
-    showNotification('❌ Запись не найдена');
-    return;
-  }
-  if (booking.status === 'cancelled') {
-    showNotification('❌ Эта запись уже отменена');
-    return;
-  }
-  
-  // Обновляем статус
-  booking.status = 'cancelled';
-  
-  // Освобождаем слот
-  if (booking.date && booking.time) {
-    releaseSlot(new Date(booking.date), booking.time);
-    renderCalendar();
-    renderTimeSlots();
-  }
-  
-  saveAllBookings();
-  showNotification('✅ Запись отменена, слот освобождён');
-  
-  // Отправляем уведомление клиенту
-  if (booking.tgUserId) {
-    const cancelMessage = source === 'admin' 
-      ? '❌ Ваша запись была ОТМЕНЕНА администратором. Слот освобождён. Вы можете записаться на другое время.'
-      : '❌ Вы успешно отменили запись. Слот освобождён.';
-    try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: booking.tgUserId, text: cancelMessage })
-      });
-    } catch(e) { console.error('Ошибка отправки уведомления клиенту:', e); }
-  }
 }
 
 function renderBookingsHistory() {
@@ -475,7 +583,7 @@ function renderBookingsHistory() {
               <td>${escapeHtml(b.name)}<br><small style="color:#666">${b.phone}</small></td>
               <td>${escapeHtml(b.service)}<br><small style="color:#666">${b.size || ''}</small></td>
               <td><span class="status ${statusClass}">${statusText}</span></td>
-              <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking(${b.id}, 'admin')">ОТМЕНИТЬ</button>` : '—'}</td>
+              <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking(${b.id})">ОТМЕНИТЬ</button>` : '—'}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -484,88 +592,17 @@ function renderBookingsHistory() {
   `;
 }
 
-// Синхронизация между вкладками
-window.addEventListener('storage', (e) => {
-  if (e.key === 'tattoo_all_bookings') {
-    loadAllBookings();
-  }
-  if (e.key === 'tattoo_booked_slots') {
-    loadBookedSlots();
-    renderCalendar();
-    renderTimeSlots();
-  }
-});
-
-// ==================== ПОРТФОЛИО ====================
-let portfolio = [];
-
-function loadPortfolio() {
-  const saved = localStorage.getItem('tattoo_portfolio');
-  portfolio = saved ? JSON.parse(saved) : [];
-  renderPortfolio();
-  renderAdminPortfolio();
-}
-
-function savePortfolio() {
-  localStorage.setItem('tattoo_portfolio', JSON.stringify(portfolio));
-  renderPortfolio();
-  renderAdminPortfolio();
-}
-
-function renderPortfolio() {
-  const grid = document.getElementById('portfolioGrid');
-  if (!grid) return;
-  if (portfolio.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Портфолио пополняется...</div>';
+async function cancelBooking(bookingId) {
+  const success = await cancelBookingInPB(bookingId);
+  if (!success) {
+    showNotification('❌ Запись уже отменена или не найдена');
     return;
   }
-  grid.innerHTML = portfolio.map(item => `<div class="portfolio-item"><img class="portfolio-img" src="${escapeHtml(item.image)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=ERROR'"><div class="portfolio-info"><div class="portfolio-title">${escapeHtml(item.title)}</div><div class="portfolio-desc">${escapeHtml(item.desc)}</div></div></div>`).join('');
+  showNotification('✅ Запись отменена, слот освобождён');
+  await refreshBookingsHistory();
+  renderCalendar();
+  if (selectedDate) renderTimeSlots();
 }
-
-function renderAdminPortfolio() {
-  const list = document.getElementById('adminPortfolioList');
-  if (!list) return;
-  if (portfolio.length === 0) {
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Нет работ</div>';
-    return;
-  }
-  list.innerHTML = portfolio.map((item, idx) => `<div class="portfolio-admin-item"><div class="portfolio-admin-info"><div class="portfolio-admin-title">${escapeHtml(item.title)}</div><div class="portfolio-admin-desc">${escapeHtml(item.desc)}</div></div><button class="delete-btn" onclick="deletePortfolioItem(${idx})">УДАЛИТЬ</button></div>`).join('');
-}
-
-function addPortfolioItem() {
-  const title = document.getElementById('adminTitle').value.trim();
-  const desc = document.getElementById('adminDesc').value.trim();
-  const imageInput = document.getElementById('adminImageFile');
-  if (!title) { showNotification('Введите название'); return; }
-  if (!imageInput.files || imageInput.files.length === 0) { showNotification('Выберите фото'); return; }
-  const file = imageInput.files[0];
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    portfolio.unshift({ id: Date.now(), title, image: e.target.result, desc });
-    savePortfolio();
-    document.getElementById('adminTitle').value = '';
-    document.getElementById('adminDesc').value = '';
-    document.getElementById('adminImageFile').value = '';
-    document.getElementById('adminPreview').innerHTML = '';
-    showNotification('Работа добавлена!');
-  };
-  reader.readAsDataURL(file);
-}
-
-function deletePortfolioItem(index) {
-  portfolio.splice(index, 1);
-  savePortfolio();
-  showNotification('Работа удалена');
-}
-
-document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
-  const preview = document.getElementById('adminPreview');
-  if (e.target.files && e.target.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(ev) { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--border)">`; };
-    reader.readAsDataURL(e.target.files[0]);
-  } else preview.innerHTML = '';
-});
 
 // ==================== ВЫЗОВ АДМИНКИ ====================
 let clickCount = 0;
@@ -574,14 +611,14 @@ document.getElementById('logo').addEventListener('click', () => {
   clickCount++;
   if (clickTimer) clearTimeout(clickTimer);
   clickTimer = setTimeout(() => { clickCount = 0; }, 800);
-  if (clickCount >= ADMIN_CLICK_COUNT) {
+  if (clickCount >= 15) {
     clickCount = 0;
     const pwd = prompt('Введите пароль администратора:');
     if (pwd === ADMIN_PASSWORD) {
       localStorage.setItem('isAdmin', 'true');
       document.getElementById('adminNavBtn').style.display = 'block';
       showNotification('Админ-панель активирована!');
-      renderBookingsHistory();
+      refreshBookingsHistory();
     } else if (pwd !== null) showNotification('Неверный пароль');
     if (clickTimer) clearTimeout(clickTimer);
   }
@@ -640,7 +677,7 @@ function selectSize(index) {
 }
 
 // ==================== КАЛЕНДАРЬ ====================
-function renderCalendar() {
+async function renderCalendar() {
   const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -655,9 +692,8 @@ function renderCalendar() {
     const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
     let hasFreeSlots = false;
     if (!isPast) {
-      for (const slot of allTimeSlots) {
-        if (isSlotAvailable(date, slot)) { hasFreeSlots = true; break; }
-      }
+      const availableSlots = await loadAvailableSlots(date);
+      hasFreeSlots = availableSlots.length > 0;
     }
     let cls = '';
     if (isPast) cls = 'disabled';
@@ -668,11 +704,11 @@ function renderCalendar() {
   document.getElementById('calendar').innerHTML = html;
 }
 
-function selectDate(y,m,d) {
+async function selectDate(y,m,d) {
   selectedDate = new Date(y,m,d);
   selectedTime = null;
-  renderCalendar();
-  renderTimeSlots();
+  await renderCalendar();
+  await renderTimeSlots();
 }
 
 function prevMonth() { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1,1); renderCalendar(); }
@@ -680,23 +716,22 @@ function nextMonth() { currentMonth = new Date(currentMonth.getFullYear(), curre
 
 const allTimeSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 
-function renderTimeSlots() {
+async function renderTimeSlots() {
   if (!selectedDate) {
     document.getElementById('timeSlots').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Сначала выберите дату</div>';
     return;
   }
+  const availableSlots = await loadAvailableSlots(selectedDate);
   const slotsHtml = allTimeSlots.map(slot => {
-    const isAvailable = isSlotAvailable(selectedDate, slot);
+    const isAvailable = availableSlots.includes(slot);
     return `<div class="time-slot ${!isAvailable ? 'disabled' : ''} ${selectedTime === slot ? 'selected' : ''}" onclick="${isAvailable ? `selectTime('${slot}')` : ''}">${slot}</div>`;
   }).join('');
   document.getElementById('timeSlots').innerHTML = slotsHtml;
 }
 
 function selectTime(slot) {
-  if (isSlotAvailable(selectedDate, slot)) {
-    selectedTime = slot;
-    renderTimeSlots();
-  }
+  selectedTime = slot;
+  renderTimeSlots();
 }
 
 // ==================== РЕФЕРЕНСЫ ====================
@@ -778,21 +813,21 @@ async function submitBooking() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   
-  if (!isSlotAvailable(selectedDate, selectedTime)) {
+  const availableSlots = await loadAvailableSlots(selectedDate);
+  if (!availableSlots.includes(selectedTime)) {
     showNotification('❌ К сожалению, это время уже занято. Выберите другое.');
-    renderTimeSlots();
+    await renderTimeSlots();
     return;
   }
   
-  const booked = bookSlot(selectedDate, selectedTime);
+  const booked = await bookSlot(selectedDate, selectedTime);
   if (!booked) {
     showNotification('❌ Не удалось забронировать слот. Попробуйте другое время.');
-    renderTimeSlots();
+    await renderTimeSlots();
     return;
   }
   
   const newBooking = {
-    id: Date.now(),
     name: name,
     phone: phone,
     service: selectedService?.name,
@@ -802,15 +837,14 @@ async function submitBooking() {
     time: selectedTime || null,
     place: place || null,
     idea: idea || null,
-    references: [...references],
-    referenceImages: [...referenceImages],
+    references: references,
+    referenceImages: referenceImages,
     tgUser: tgUserInfo,
     tgUserId: tgUserId,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-    reminderSent: false
+    status: 'new'
   };
-  addBooking(newBooking);
+  
+  const savedBooking = await saveBookingToPB(newBooking);
   
   let message = `🖤 НОВАЯ ЗАЯВКА НА ТАТУ 🖤\n\n📋 Услуга: ${selectedService?.name}\n📐 Размер: ${selectedSize||(selectedService?.name==='Консультация'?'Не требуется':'—')}\n💰 Стоимость: ${selectedService?.price}\n\n📅 Дата: ${dateStr}\n⏰ Время: ${selectedTime||'—'}\n📍 Место: ${place||'Не указано'}\n\n👤 Клиент: ${name}\n📞 Телефон: ${phone}\n✈️ Telegram: ${tgUserInfo}\n\n💬 Идея: ${idea||'Не указано'}`;
   if (references.length > 0) message += `\n\n📎 Ссылки-референсы:\n${references.join('\n')}`;
@@ -832,7 +866,7 @@ async function submitBooking() {
     
     const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${dateStr}\n⏰ ${selectedTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selectedService?.name}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\n⚠️ ВНИМАНИЕ: Слот забронирован. Если нужно отменить запись, нажмите кнопку ниже.`;
     const keyboard = {
-      inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: JSON.stringify({ action: 'cancel', bookingId: newBooking.id }) }]]
+      inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: JSON.stringify({ action: 'cancel', bookingId: savedBooking.id }) }]]
     };
     if (tgUserId) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -842,9 +876,10 @@ async function submitBooking() {
       });
     }
     
-    showNotification('✅ Заявка отправлена! Слот забронирован. Мастер свяжется с вами');
+    showNotification('✅ Заявка отправлена! Слот забронирован.');
     resetForm();
-  } catch(e) { console.error(e); showNotification('❌ Ошибка отправки, но слот забронирован. Мастер скоро свяжется'); btn.disabled = false; btn.innerHTML = 'ОТПРАВИТЬ'; }
+    await refreshBookingsHistory();
+  } catch(e) { console.error(e); showNotification('❌ Ошибка отправки, но слот забронирован.'); btn.disabled = false; btn.innerHTML = 'ОТПРАВИТЬ'; }
 }
 
 function resetForm() {
@@ -874,49 +909,45 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     if(panel==='booking') document.getElementById('panelBooking').classList.add('active');
     if(panel==='portfolio') document.getElementById('panelPortfolio').classList.add('active');
-    if(panel==='admin') { document.getElementById('panelAdmin').classList.add('active'); renderBookingsHistory(); }
+    if(panel==='admin') { document.getElementById('panelAdmin').classList.add('active'); refreshBookingsHistory(); }
   });
 });
 
-// Глобальная функция для отмены через бота
 window.cancelBooking = cancelBooking;
 
-// Обработка callback от бота (для inline кнопок)
-if (window.Telegram?.WebApp) {
-  window.Telegram.WebApp.onEvent('mainButtonClicked', () => {});
-}
-
 // ==================== НАПОМИНАНИЯ ====================
-function checkReminders() {
+async function checkReminders() {
   const now = new Date();
-  allBookings.forEach(booking => {
-    if (booking.status === 'cancelled') return;
-    if (!booking.date) return;
+  const bookings = await getAllBookingsFromPB();
+  for (const booking of bookings) {
+    if (booking.status === 'cancelled') continue;
+    if (!booking.date) continue;
     const bookingDate = new Date(booking.date);
     const diffDays = Math.ceil((bookingDate - now) / (1000 * 60 * 60 * 24));
     if (diffDays === 1 && !booking.reminderSent) {
-      booking.reminderSent = true;
-      saveAllBookings();
+      await pb.collection('bookings').update(booking.id, { reminderSent: true });
       if (booking.tgUserId) {
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: booking.tgUserId, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` })
         });
       }
     }
-  });
+  }
 }
 setInterval(checkReminders, 60 * 60 * 1000);
 checkReminders();
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
-loadBookedSlots();
-loadAllBookings();
-loadPortfolio();
-renderServices();
-renderSizes();
-renderCalendar();
+async function init() {
+  await refreshPortfolio();
+  await refreshBookingsHistory();
+  renderServices();
+  renderSizes();
+  await renderCalendar();
+}
+init();
 </script>
 </body>
 </html>
