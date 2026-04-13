@@ -2,154 +2,395 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>MR. CHAO TATTOO | STUDIO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>MR. CHAO TATTOO</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-:root{--bg:#050505;--bg-card:#0a0a0a;--bg-elevated:#111;--border:#1a1a1a;--border-light:#222;--gray:#2a2a2a;--gray-light:#3a3a3a;--text:#e0e0e0;--text-muted:#666;--red:#cc0000;}
-body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;}
-.container{max-width:1400px;margin:0 auto;padding:20px;}
-.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;padding:20px 0 30px;border-bottom:1px solid var(--border);margin-bottom:30px;}
-.logo{cursor:pointer;user-select:none;}
-.logo h1{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:4px;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.logo p{font-size:11px;letter-spacing:3px;color:var(--text-muted);}
-.user-info{background:var(--bg-card);border:1px solid var(--border);padding:8px 16px;font-size:13px;}
-.user-info span{color:var(--text-muted);}
-.user-info strong{color:var(--text);}
-.nav{display:flex;gap:4px;background:var(--bg-card);border:1px solid var(--border);margin-bottom:30px;flex-wrap:wrap;}
-.nav-btn{padding:14px 28px;background:transparent;border:none;color:var(--text-muted);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
-.nav-btn.active{background:var(--gray);color:#fff;}
-.nav-btn:hover:not(.active){background:var(--bg-elevated);color:var(--text);}
-.panel{display:none;animation:fadeIn 0.3s ease;}
-.panel.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-.master-bio{background:var(--bg-card);border:1px solid var(--border);padding:24px;margin-bottom:30px;}
-.master-bio h3{font-family:'Bebas Neue',sans-serif;font-size:20px;margin-bottom:16px;letter-spacing:2px;}
-.master-bio p{line-height:1.8;color:var(--text-muted);font-size:14px;}
-.master-bio strong{color:var(--text);}
-.portfolio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-bottom:30px;}
-.portfolio-item{background:var(--bg-card);border:1px solid var(--border);overflow:hidden;transition:transform 0.2s;}
-.portfolio-item:hover{transform:translateY(-4px);border-color:var(--gray-light);}
-.portfolio-img{width:100%;height:280px;object-fit:cover;background:var(--bg-elevated);display:block;}
-.portfolio-info{padding:12px 16px;}
-.portfolio-title{font-weight:600;margin-bottom:4px;}
-.portfolio-desc{font-size:12px;color:var(--text-muted);}
-.booking-card{background:var(--bg-card);border:1px solid var(--border);padding:30px;max-width:900px;margin:0 auto;}
-.steps{display:flex;margin-bottom:30px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.step{flex:1;padding:12px;text-align:center;cursor:pointer;transition:all 0.2s;border-bottom:2px solid transparent;min-width:60px;}
-.step.active{border-bottom-color:var(--gray-light);}
-.step-num{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text-muted);}
-.step.active .step-num{color:#fff;}
-.step-label{font-size:10px;letter-spacing:2px;color:var(--text-muted);}
-.step.active .step-label{color:var(--text);}
-.step-content{display:none;}
-.step-content.active{display:block;}
-.form-group{margin-bottom:20px;}
-label{display:block;font-size:11px;letter-spacing:2px;margin-bottom:8px;color:var(--text-muted);}
-input,select,textarea{width:100%;padding:12px 16px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;transition:all 0.2s;border-radius:0;}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-light);}
-.services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
-.service-card{background:var(--bg-elevated);border:1px solid var(--border);padding:16px;cursor:pointer;transition:all 0.2s;}
-.service-card.selected{border-color:var(--gray-light);background:var(--gray);}
-.service-card:hover{border-color:var(--gray-light);}
-.service-name{font-weight:600;margin-bottom:4px;}
-.service-price{font-size:14px;color:var(--text-muted);}
-.sizes{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
-.size-btn{padding:10px 20px;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
-.size-btn.selected{border-color:var(--gray-light);background:var(--gray);}
-.size-btn.hidden{display:none;}
-.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
-.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.cal-month{font-family:'Bebas Neue',sans-serif;font-size:20px;}
-.cal-nav{background:var(--bg-card);border:1px solid var(--border);padding:6px 12px;cursor:pointer;transition:all 0.2s;}
-.cal-nav:hover{background:var(--gray);}
-.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:10px;text-align:center;font-size:11px;color:var(--text-muted);border-bottom:1px solid var(--border);}
-.cal-days{display:grid;grid-template-columns:repeat(7,1fr);padding:10px;gap:4px;}
-.cal-day{padding:10px;text-align:center;cursor:pointer;transition:all 0.2s;border-radius:0;}
-.cal-day:hover:not(.disabled):not(.booked){background:var(--gray);}
-.cal-day.selected{background:var(--gray-light);}
-.cal-day.disabled{color:var(--text-muted);opacity:0.3;cursor:not-allowed;}
-.cal-day.booked{color:var(--text-muted);opacity:0.4;cursor:not-allowed;text-decoration:line-through;background:#1a0000;}
-.cal-day.today{border:1px solid var(--gray-light);}
-.time-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;margin-bottom:20px;}
-.time-slot{padding:10px;text-align:center;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
-.time-slot:hover:not(.disabled){background:var(--gray);}
-.time-slot.selected{background:var(--gray-light);}
-.time-slot.disabled{opacity:0.3;cursor:not-allowed;text-decoration:line-through;background:#1a0000;}
-.ref-group{border:1px solid var(--border);padding:16px;margin-bottom:16px;}
-.ref-title{font-size:11px;letter-spacing:2px;color:var(--text-muted);margin-bottom:12px;}
-.ref-link-group{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
-.ref-link-group input{flex:1;}
-.ref-add-btn{padding:12px 20px;background:var(--gray);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:all 0.2s;font-size:12px;}
-.ref-add-btn:hover{background:var(--gray-light);}
-.photo-upload-label{display:inline-block;background:var(--gray);padding:12px 20px;cursor:pointer;text-align:center;font-size:12px;transition:all 0.2s;margin-bottom:12px;}
-.photo-upload-label:hover{background:var(--gray-light);}
-.photo-upload-input{display:none;}
-.ref-list{margin-top:10px;}
-.ref-item{display:inline-flex;align-items:center;gap:8px;background:var(--bg-elevated);padding:4px 10px;margin:4px;font-size:11px;border:1px solid var(--border);}
-.ref-item a{color:var(--text-muted);text-decoration:none;}
-.ref-item a:hover{color:var(--text);}
-.ref-remove{cursor:pointer;color:var(--text-muted);font-size:14px;}
-.photo-preview{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
-.photo-item{position:relative;width:80px;height:80px;border:1px solid var(--border);overflow:hidden;}
-.photo-item img{width:100%;height:100%;object-fit:cover;}
-.photo-remove{position:absolute;top:-8px;right:-8px;background:var(--red);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;background:var(--gray-light);}
-.btn{width:100%;padding:14px;background:var(--gray);border:none;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;cursor:pointer;transition:all 0.2s;}
-.btn:hover{background:var(--gray-light);}
-.btn-secondary{background:transparent;border:1px solid var(--border);margin-top:12px;}
-.btn-secondary:hover{border-color:var(--gray-light);}
-.admin-section{background:var(--bg-card);border:1px solid var(--border);padding:24px;margin-bottom:30px;}
-.admin-title{font-family:'Bebas Neue',sans-serif;font-size:24px;margin-bottom:20px;border-left:3px solid var(--gray-light);padding-left:12px;}
-.admin-form{display:grid;gap:16px;margin-bottom:30px;}
-.image-upload-label{display:inline-block;background:var(--gray);padding:12px 20px;cursor:pointer;text-align:center;font-size:14px;transition:all 0.2s;}
-.image-upload-label:hover{background:var(--gray-light);}
-.image-upload-input{display:none;}
-.admin-preview{max-width:200px;margin-top:10px;}
-.admin-preview img{width:100%;height:auto;border:1px solid var(--border);}
-.portfolio-list{display:flex;flex-direction:column;gap:12px;}
-.portfolio-admin-item{display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg-elevated);border:1px solid var(--border);flex-wrap:wrap;gap:10px;}
-.portfolio-admin-info{flex:1;}
-.portfolio-admin-title{font-weight:600;}
-.portfolio-admin-desc{font-size:12px;color:var(--text-muted);}
-.delete-btn{background:transparent;border:1px solid var(--border);padding:6px 16px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
-.delete-btn:hover{border-color:var(--gray-light);color:var(--text);}
-.booking-history-table{width:100%;border-collapse:collapse;margin-top:16px;overflow-x:auto;display:block;}
-.booking-history-table th,.booking-history-table td{padding:12px;text-align:left;border-bottom:1px solid var(--border);}
-.booking-history-table th{color:var(--text-muted);font-size:11px;letter-spacing:1px;}
-.status{padding:4px 8px;font-size:11px;background:var(--gray);display:inline-block;}
-.status.confirmed{background:#006600;color:#fff;}
-.status.cancelled{background:#660000;color:#fff;}
-.cancel-inline-btn{background:transparent;border:1px solid var(--border);padding:4px 12px;color:var(--text-muted);cursor:pointer;font-size:11px;}
-.cancel-inline-btn:hover{border-color:var(--red);color:var(--red);}
-footer{margin-top:60px;padding:20px;border-top:1px solid var(--border);text-align:center;}
-footer p{color:var(--text-muted);font-size:12px;margin-bottom:8px;}
-footer p:last-child{font-size:11px;}
-.notification{position:fixed;bottom:20px;right:20px;background:var(--bg-card);border:1px solid var(--border);padding:12px 20px;z-index:1000;animation:slideIn 0.3s ease;max-width:90%;}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
-@media (max-width:768px){
-  .container{padding:12px;}
-  .header{flex-direction:column;text-align:center;}
-  .nav-btn{padding:10px 16px;font-size:14px;}
-  .booking-card{padding:20px;}
-  .services-grid{grid-template-columns:1fr;}
-  .cal-days{gap:2px;}
-  .cal-day{padding:6px;font-size:12px;}
-  .steps{flex-wrap:wrap;}
-  .step{padding:8px 4px;}
-  .step-num{font-size:16px;}
-  .step-label{font-size:8px;}
-  .time-slots{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));}
-  .booking-history-table th,.booking-history-table td{padding:8px;font-size:10px;}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-@media (min-width:1200px){
-  .container{padding:40px;}
-  .booking-card{padding:50px;}
+
+body {
+  background: #050505;
+  color: #e0e0e0;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 20px;
 }
-.loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.6s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  padding: 20px 0;
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: 20px;
+}
+
+.logo {
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.logo h1 {
+  font-size: 36px;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #fff, #888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo p {
+  font-size: 11px;
+  color: #666;
+}
+
+.user-info {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  padding: 8px 16px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 12px;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  color: #666;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+}
+
+.nav-btn.active {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+}
+
+.master-bio {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.master-bio h3 {
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.master-bio p {
+  color: #888;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.booking-card {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  padding: 20px;
+}
+
+.steps {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.step {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.step.active {
+  border-bottom-color: #2a2a2a;
+}
+
+.step-num {
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+}
+
+.step.active .step-num {
+  color: #fff;
+}
+
+.step-label {
+  font-size: 10px;
+  color: #666;
+}
+
+.step-content {
+  display: none;
+}
+
+.step-content.active {
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  background: #111;
+  border: 1px solid #222;
+  color: #fff;
+  font-size: 14px;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.service-card {
+  background: #111;
+  border: 1px solid #222;
+  padding: 12px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.service-card.selected {
+  border-color: #666;
+  background: #1a1a1a;
+}
+
+.service-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.service-price {
+  font-size: 12px;
+  color: #666;
+}
+
+.sizes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.size-btn {
+  padding: 8px 16px;
+  background: #111;
+  border: 1px solid #222;
+  cursor: pointer;
+}
+
+.size-btn.selected {
+  border-color: #666;
+  background: #1a1a1a;
+}
+
+.calendar {
+  background: #111;
+  border: 1px solid #222;
+  margin-bottom: 15px;
+}
+
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #222;
+}
+
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 10px;
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+}
+
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 10px;
+  gap: 4px;
+}
+
+.cal-day {
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+}
+
+.cal-day.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cal-day.booked {
+  opacity: 0.3;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.cal-day.selected {
+  background: #2a2a2a;
+  border-color: #666;
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.time-slot {
+  padding: 10px;
+  text-align: center;
+  background: #111;
+  border: 1px solid #222;
+  cursor: pointer;
+}
+
+.time-slot.selected {
+  background: #2a2a2a;
+  border-color: #666;
+}
+
+.time-slot.disabled {
+  opacity: 0.3;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  background: #2a2a2a;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  margin-top: 5px;
+}
+
+.admin-section {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.portfolio-item {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  overflow: hidden;
+}
+
+.portfolio-img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  background: #111;
+}
+
+.portfolio-info {
+  padding: 12px;
+}
+
+.portfolio-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.portfolio-desc {
+  font-size: 12px;
+  color: #666;
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  padding: 10px 20px;
+  z-index: 1000;
+}
+
+footer {
+  margin-top: 40px;
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid #1a1a1a;
+  color: #666;
+  font-size: 12px;
+}
+
+.loader {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
@@ -168,9 +409,8 @@ footer p:last-child{font-size:11px;}
   <div class="master-bio">
     <h3>ЛЁНЯ / MR. CHAO</h3>
     <p>Привет 👋 Меня зовут Лёня, я занимаюсь татуировкой 5 лет. 💉<br>
-    В основном работаю в стиле графика. Города Хабаровск-Владивосток.<br>
-    Бью татуировки как по вашим идеям, так и по своим эскизам. <strong>Разработка эскиза бесплатная.</strong><br>
-    Работаю по предварительной записи, с внесением депозита.</p>
+    В основном работаю в стиле графика. Хабаровск-Владивосток.<br>
+    Разработка эскиза бесплатная. Работаю по предварительной записи, с внесением депозита.</p>
   </div>
   
   <div class="nav">
@@ -197,7 +437,7 @@ footer p:last-child{font-size:11px;}
           <label>РАЗМЕР РАБОТЫ</label>
           <div class="sizes" id="sizesGrid"></div>
         </div>
-        <div class="error" id="step1Error" style="color:#666; font-size:12px; margin-bottom:16px; display:none"></div>
+        <div id="step1Error" style="color:#cc0000; font-size:12px; margin-top:10px; display:none"></div>
         <button class="btn" onclick="nextStep()">ДАЛЕЕ →</button>
       </div>
       
@@ -210,7 +450,7 @@ footer p:last-child{font-size:11px;}
           <label>ВЫБЕРИТЕ ВРЕМЯ</label>
           <div class="time-slots" id="timeSlots"></div>
         </div>
-        <div class="error" id="step2Error" style="color:#666; font-size:12px; margin-bottom:16px; display:none"></div>
+        <div id="step2Error" style="color:#cc0000; font-size:12px; margin-top:10px; display:none"></div>
         <button class="btn" onclick="nextStep()">ДАЛЕЕ →</button>
         <button class="btn btn-secondary" onclick="prevStep()">← НАЗАД</button>
       </div>
@@ -218,44 +458,24 @@ footer p:last-child{font-size:11px;}
       <div class="step-content" data-content="3">
         <div class="form-group">
           <label>ВАШЕ ИМЯ</label>
-          <input type="text" id="clientName" placeholder="Как к вам обращаться?">
+          <input type="text" id="clientName">
         </div>
         <div class="form-group">
           <label>ТЕЛЕФОН</label>
-          <input type="tel" id="clientPhone" placeholder="+7 (___) ___-__-__">
+          <input type="tel" id="clientPhone" placeholder="+7">
         </div>
         <div class="form-group">
           <label>МЕСТО НАНЕСЕНИЯ</label>
           <select id="clientPlace">
-            <option value="">Выберите...</option>
             <option>Рука</option><option>Нога</option><option>Грудь</option>
             <option>Спина</option><option>Шея</option><option>Другое</option>
           </select>
         </div>
         <div class="form-group">
           <label>ИДЕЯ / ОПИСАНИЕ</label>
-          <textarea id="clientIdea" rows="3" placeholder="Опишите вашу идею..."></textarea>
+          <textarea id="clientIdea" rows="3"></textarea>
         </div>
-        
-        <div class="ref-group">
-          <div class="ref-title">📎 РЕФЕРЕНСЫ (ССЫЛКИ)</div>
-          <div class="ref-link-group">
-            <input type="text" id="refInput" placeholder="https://...">
-            <button type="button" class="ref-add-btn" onclick="addReference()">+ ДОБАВИТЬ ССЫЛКУ</button>
-          </div>
-          <div class="ref-list" id="refList"></div>
-        </div>
-        
-        <div class="ref-group">
-          <div class="ref-title">🖼️ РЕФЕРЕНСЫ (ФОТО)</div>
-          <label class="photo-upload-label">
-            + ЗАГРУЗИТЬ ФОТО
-            <input type="file" id="photoInput" class="photo-upload-input" accept="image/*" multiple>
-          </label>
-          <div class="photo-preview" id="photoPreview"></div>
-        </div>
-        
-        <div class="error" id="step3Error" style="color:#666; font-size:12px; margin-bottom:16px; display:none"></div>
+        <div id="step3Error" style="color:#cc0000; font-size:12px; margin-top:10px; display:none"></div>
         <button class="btn" onclick="nextStep()">ДАЛЕЕ →</button>
         <button class="btn btn-secondary" onclick="prevStep()">← НАЗАД</button>
       </div>
@@ -263,9 +483,8 @@ footer p:last-child{font-size:11px;}
       <div class="step-content" data-content="4">
         <div class="form-group">
           <label>ПРОВЕРЬТЕ ДАННЫЕ</label>
-          <div id="summary" style="background:var(--bg-elevated); padding:16px; border:1px solid var(--border);"></div>
+          <div id="summary" style="background:#111; padding:15px; border:1px solid #222;"></div>
         </div>
-        <div class="error" id="step4Error" style="color:#666; font-size:12px; margin-bottom:16px; display:none"></div>
         <button class="btn" onclick="submitBooking()">ОТПРАВИТЬ</button>
         <button class="btn btn-secondary" onclick="prevStep()">← НАЗАД</button>
       </div>
@@ -278,27 +497,21 @@ footer p:last-child{font-size:11px;}
   
   <div class="panel" id="panelAdmin">
     <div class="admin-section">
-      <div class="admin-title">ДОБАВИТЬ РАБОТУ</div>
-      <div class="admin-form">
-        <input type="text" id="adminTitle" placeholder="Название работы">
-        <label class="image-upload-label">
-          ВЫБРАТЬ ФОТО
-          <input type="file" id="adminImageFile" class="image-upload-input" accept="image/*">
-        </label>
-        <textarea id="adminDesc" rows="2" placeholder="Описание"></textarea>
-        <div class="admin-preview" id="adminPreview"></div>
-        <button class="btn" id="addPortfolioBtn">ДОБАВИТЬ</button>
-      </div>
+      <h3>ДОБАВИТЬ РАБОТУ</h3>
+      <input type="text" id="adminTitle" placeholder="Название">
+      <label class="image-upload-label" style="display:inline-block; background:#2a2a2a; padding:12px; margin:10px 0; cursor:pointer;">ВЫБРАТЬ ФОТО
+        <input type="file" id="adminImageFile" accept="image/*" style="display:none;">
+      </label>
+      <textarea id="adminDesc" rows="2" placeholder="Описание"></textarea>
+      <button class="btn" id="addPortfolioBtn">ДОБАВИТЬ</button>
     </div>
-    
     <div class="admin-section">
-      <div class="admin-title">ИСТОРИЯ ЗАПИСЕЙ</div>
+      <h3>ИСТОРИЯ ЗАПИСЕЙ</h3>
       <div id="bookingsHistoryList"></div>
     </div>
-    
     <div class="admin-section">
-      <div class="admin-title">УПРАВЛЕНИЕ РАБОТАМИ</div>
-      <div class="portfolio-list" id="adminPortfolioList"></div>
+      <h3>УПРАВЛЕНИЕ РАБОТАМИ</h3>
+      <div id="adminPortfolioList"></div>
     </div>
   </div>
   
@@ -316,317 +529,35 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BOT_TOKEN = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID = '1085941747';
 const ADMIN_PASSWORD = 'chao123';
-const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
-const STUDIO_GEO_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
 
-// ==================== SUPABASE ====================
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ==================== ГЛОБАЛЬНЫЕ ДАННЫЕ ====================
+// ==================== ПРОВЕРКА ПОДКЛЮЧЕНИЯ ====================
+(async function testConnection() {
+  console.log('=== TELEGRAM MINI APP ===');
+  console.log('Supabase URL:', SUPABASE_URL);
+  const { data, error } = await supabase.from('slots').select('count');
+  if (error) console.error('Supabase connection error:', error);
+  else console.log('Supabase connected!', data);
+})();
+
+// ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
 let currentStep = 1;
 let selectedService = null;
 let selectedSize = null;
 let selectedDate = null;
 let selectedTime = null;
 let currentMonth = new Date();
-let references = [];
-let referenceImages = [];
 let tgUser = null;
 let tgUserInfo = '';
 let tgUserId = null;
-let isProcessing = false;
+let allBookings = [];
+let portfolio = [];
 let currentBookedSlots = {};
 
-// ==================== SUPABASE ФУНКЦИИ ====================
-async function loadBookedSlotsForMonth(year, month) {
-  const startDate = new Date(year, month, 1);
-  const endDate = new Date(year, month + 1, 0);
-  const startStr = startDate.toISOString().split('T')[0];
-  const endStr = endDate.toISOString().split('T')[0];
-  
-  const { data, error } = await supabase
-    .from('slots')
-    .select('*')
-    .gte('date', startStr)
-    .lte('date', endStr);
-  
-  if (error) {
-    console.error('Error loading slots:', error);
-    return {};
-  }
-  
-  const booked = {};
-  data.forEach(item => {
-    if (!booked[item.date]) booked[item.date] = [];
-    booked[item.date].push(item.time);
-  });
-  return booked;
-}
+const allTimeSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 
-async function isSlotAvailable(date, time) {
-  const dateKey = date.toISOString().split('T')[0];
-  const { data, error } = await supabase
-    .from('slots')
-    .select('*')
-    .eq('date', dateKey)
-    .eq('time', time);
-  
-  if (error) return true;
-  return data.length === 0;
-}
-
-async function bookSlot(date, time) {
-  const dateKey = date.toISOString().split('T')[0];
-  const { error } = await supabase
-    .from('slots')
-    .insert([{ date: dateKey, time: time }]);
-  
-  return !error;
-}
-
-async function releaseSlot(date, time) {
-  const dateKey = date.toISOString().split('T')[0];
-  await supabase
-    .from('slots')
-    .delete()
-    .eq('date', dateKey)
-    .eq('time', time);
-}
-
-async function saveBookingToSupabase(bookingData) {
-  const { data, error } = await supabase
-    .from('bookings')
-    .insert([bookingData])
-    .select();
-  
-  if (error) throw error;
-  return data[0];
-}
-
-async function getAllBookingsFromSupabase() {
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) return [];
-  return data;
-}
-
-async function cancelBookingInSupabase(bookingId) {
-  const { data: booking } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('id', bookingId)
-    .single();
-  
-  if (!booking || booking.status === 'cancelled') return false;
-  
-  await supabase
-    .from('bookings')
-    .update({ status: 'cancelled' })
-    .eq('id', bookingId);
-  
-  if (booking.date && booking.time) {
-    await releaseSlot(new Date(booking.date), booking.time);
-  }
-  return true;
-}
-
-async function loadPortfolioFromSupabase() {
-  const { data, error } = await supabase
-    .from('portfolio')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) return [];
-  return data;
-}
-
-async function addPortfolioItemToSupabase(title, imageBase64, desc) {
-  const { error } = await supabase
-    .from('portfolio')
-    .insert([{ title: title, image: imageBase64, description: desc }]);
-  
-  if (error) throw error;
-}
-
-async function deletePortfolioItemFromSupabase(itemId) {
-  await supabase
-    .from('portfolio')
-    .delete()
-    .eq('id', itemId);
-}
-
-// ==================== ПОРТФОЛИО ====================
-let portfolio = [];
-
-async function refreshPortfolio() {
-  portfolio = await loadPortfolioFromSupabase();
-  renderPortfolio();
-  renderAdminPortfolio();
-}
-
-function renderPortfolio() {
-  const grid = document.getElementById('portfolioGrid');
-  if (!grid) return;
-  if (portfolio.length === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Портфолио пополняется...</div>';
-    return;
-  }
-  grid.innerHTML = portfolio.map(item => `
-    <div class="portfolio-item">
-      <img class="portfolio-img" src="${escapeHtml(item.image)}" onerror="this.src='https://placehold.co/400x300/1a1a1a/666?text=ERROR'">
-      <div class="portfolio-info">
-        <div class="portfolio-title">${escapeHtml(item.title)}</div>
-        <div class="portfolio-desc">${escapeHtml(item.description || '')}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderAdminPortfolio() {
-  const list = document.getElementById('adminPortfolioList');
-  if (!list) return;
-  if (portfolio.length === 0) {
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Нет работ</div>';
-    return;
-  }
-  list.innerHTML = portfolio.map(item => `
-    <div class="portfolio-admin-item">
-      <div class="portfolio-admin-info">
-        <div class="portfolio-admin-title">${escapeHtml(item.title)}</div>
-        <div class="portfolio-admin-desc">${escapeHtml(item.description || '')}</div>
-      </div>
-      <button class="delete-btn" onclick="deletePortfolioItem('${item.id}')">УДАЛИТЬ</button>
-    </div>
-  `).join('');
-}
-
-async function addPortfolioItem() {
-  const title = document.getElementById('adminTitle').value.trim();
-  const desc = document.getElementById('adminDesc').value.trim();
-  const imageInput = document.getElementById('adminImageFile');
-  
-  if (!title) { showNotification('❌ Введите название работы'); return; }
-  if (!imageInput.files || imageInput.files.length === 0) { showNotification('❌ Выберите фото'); return; }
-  
-  const file = imageInput.files[0];
-  const reader = new FileReader();
-  
-  reader.onload = async function(e) {
-    try {
-      showNotification('⏳ Добавление...');
-      await addPortfolioItemToSupabase(title, e.target.result, desc);
-      await refreshPortfolio();
-      document.getElementById('adminTitle').value = '';
-      document.getElementById('adminDesc').value = '';
-      document.getElementById('adminImageFile').value = '';
-      document.getElementById('adminPreview').innerHTML = '';
-      showNotification('✅ Работа добавлена!');
-    } catch(err) {
-      console.error('Add error:', err);
-      showNotification('❌ Ошибка добавления: ' + (err.message || 'неизвестная ошибка'));
-    }
-  };
-  reader.onerror = () => showNotification('❌ Ошибка чтения файла');
-  reader.readAsDataURL(file);
-}
-
-async function deletePortfolioItem(itemId) {
-  if (confirm('Удалить эту работу из портфолио?')) {
-    try {
-      await deletePortfolioItemFromSupabase(itemId);
-      await refreshPortfolio();
-      showNotification('✅ Работа удалена');
-    } catch(err) {
-      showNotification('❌ Ошибка удаления');
-    }
-  }
-}
-
-document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
-  const preview = document.getElementById('adminPreview');
-  if (e.target.files && e.target.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--border)">`; };
-    reader.readAsDataURL(e.target.files[0]);
-  } else preview.innerHTML = '';
-});
-
-document.getElementById('addPortfolioBtn')?.addEventListener('click', addPortfolioItem);
-
-// ==================== ИСТОРИЯ ЗАПИСЕЙ ====================
-let allBookings = [];
-
-async function refreshBookingsHistory() {
-  allBookings = await getAllBookingsFromSupabase();
-  renderBookingsHistory();
-}
-
-function renderBookingsHistory() {
-  const container = document.getElementById('bookingsHistoryList');
-  if (!container) return;
-  if (allBookings.length === 0) {
-    container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted)">История записей пуста</div>';
-    return;
-  }
-  const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  container.innerHTML = `
-    <div style="overflow-x:auto;">
-      <table class="booking-history-table">
-        <thead><tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Услуга</th><th>Статус</th><th></th></tr></thead>
-        <tbody>
-          ${allBookings.map(b => {
-            const dateObj = b.date ? new Date(b.date) : null;
-            const dateStr = dateObj ? `${dateObj.getDate()} ${mo[dateObj.getMonth()]} ${dateObj.getFullYear()}` : '—';
-            const statusText = b.status === 'cancelled' ? 'ОТМЕНЕНА' : (b.status === 'confirmed' ? 'ПОДТВЕРЖДЕНА' : 'НОВАЯ');
-            const statusClass = b.status === 'cancelled' ? 'cancelled' : (b.status === 'confirmed' ? 'confirmed' : '');
-            return `<tr>
-              <td>${dateStr}</td>
-              <td>${b.time || '—'}</td>
-              <td>${escapeHtml(b.name)}<br><small style="color:#666">${b.phone}</small></td>
-              <td>${escapeHtml(b.service)}<br><small style="color:#666">${b.size || ''}</small></td>
-              <td><span class="status ${statusClass}">${statusText}</span></td>
-              <td>${b.status !== 'cancelled' ? `<button class="cancel-inline-btn" onclick="cancelBooking('${b.id}')">ОТМЕНИТЬ</button>` : '—'}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-async function cancelBooking(bookingId) {
-  const success = await cancelBookingInSupabase(bookingId);
-  if (!success) { showNotification('❌ Запись уже отменена или не найдена'); return; }
-  showNotification('✅ Запись отменена, слот освобождён');
-  await refreshBookingsHistory();
-  await renderCalendar();
-  if (selectedDate) await renderTimeSlots();
-}
-
-// ==================== ВЫЗОВ АДМИНКИ ====================
-let clickCount = 0, clickTimer = null;
-document.getElementById('logo').addEventListener('click', () => {
-  clickCount++;
-  if (clickTimer) clearTimeout(clickTimer);
-  clickTimer = setTimeout(() => { clickCount = 0; }, 800);
-  if (clickCount >= 15) {
-    clickCount = 0;
-    const pwd = prompt('Введите пароль администратора:');
-    if (pwd === ADMIN_PASSWORD) {
-      localStorage.setItem('isAdmin', 'true');
-      document.getElementById('adminNavBtn').style.display = 'block';
-      showNotification('✅ Админ-панель активирована!');
-      refreshBookingsHistory();
-    } else if (pwd !== null) showNotification('❌ Неверный пароль');
-    clearTimeout(clickTimer);
-  }
-});
-if (localStorage.getItem('isAdmin') === 'true') document.getElementById('adminNavBtn').style.display = 'block';
-
-// ==================== ТЕЛЕГРАМ ПОЛЬЗОВАТЕЛЬ ====================
+// ==================== TELEGRAM ПОЛЬЗОВАТЕЛЬ ====================
 try {
   const webApp = window.Telegram?.WebApp;
   if (webApp) {
@@ -640,15 +571,17 @@ try {
       tgUserInfo = username || fullName || 'Гость';
       document.getElementById('tgUsername').innerHTML = tgUserInfo;
       document.getElementById('clientName').value = fullName;
-    } else { document.getElementById('tgUsername').innerHTML = 'Гость'; tgUserInfo = 'Гость'; }
+    } else {
+      document.getElementById('tgUsername').innerHTML = 'Гость';
+    }
   }
-} catch(e) { document.getElementById('tgUsername').innerHTML = 'Гость'; tgUserInfo = 'Гость'; }
+} catch(e) { console.log('Telegram error:', e); }
 
 // ==================== УСЛУГИ ====================
 const services = [
   { name: 'Новая татуировка', price: 'от 8 000 ₽' },
-  { name: 'Перекрытие (Cover-up)', price: 'от 10 000 ₽' },
-  { name: 'Доработка / Touch-up', price: 'от 8 000 ₽' },
+  { name: 'Перекрытие', price: 'от 10 000 ₽' },
+  { name: 'Доработка', price: 'от 8 000 ₽' },
   { name: 'Консультация', price: 'Бесплатно' }
 ];
 const sizes = ['S (до 5 см)', 'M (5-12 см)', 'L (12-25 см)', 'XL (25+ см)'];
@@ -656,7 +589,12 @@ const sizes = ['S (до 5 см)', 'M (5-12 см)', 'L (12-25 см)', 'XL (25+ с
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
   if (!grid) return;
-  grid.innerHTML = services.map((s, i) => `<div class="service-card" onclick="selectService(${i})" data-service-index="${i}"><div class="service-name">${s.name}</div><div class="service-price">${s.price}</div></div>`).join('');
+  grid.innerHTML = services.map((s, i) => `
+    <div class="service-card" onclick="selectService(${i})" data-service-index="${i}">
+      <div class="service-name">${s.name}</div>
+      <div class="service-price">${s.price}</div>
+    </div>
+  `).join('');
 }
 
 function selectService(index) {
@@ -664,14 +602,20 @@ function selectService(index) {
   document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
   document.querySelector(`.service-card[data-service-index="${index}"]`).classList.add('selected');
   const sizesGroup = document.getElementById('sizesGroup');
-  if (selectedService.name === 'Консультация') { sizesGroup.style.display = 'none'; selectedSize = null; }
-  else sizesGroup.style.display = 'block';
+  if (selectedService.name === 'Консультация') {
+    sizesGroup.style.display = 'none';
+    selectedSize = null;
+  } else {
+    sizesGroup.style.display = 'block';
+  }
 }
 
 function renderSizes() {
   const grid = document.getElementById('sizesGrid');
   if (!grid) return;
-  grid.innerHTML = sizes.map((s, i) => `<div class="size-btn" onclick="selectSize(${i})" data-size-index="${i}">${s}</div>`).join('');
+  grid.innerHTML = sizes.map((s, i) => `
+    <div class="size-btn" onclick="selectSize(${i})" data-size-index="${i}">${s}</div>
+  `).join('');
 }
 
 function selectSize(index) {
@@ -681,6 +625,27 @@ function selectSize(index) {
 }
 
 // ==================== КАЛЕНДАРЬ ====================
+async function loadBookedSlotsForMonth(year, month) {
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
+  const startStr = startDate.toISOString().split('T')[0];
+  const endStr = endDate.toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('slots')
+    .select('*')
+    .gte('date', startStr)
+    .lte('date', endStr);
+  
+  if (error) return {};
+  const booked = {};
+  data.forEach(item => {
+    if (!booked[item.date]) booked[item.date] = [];
+    booked[item.date].push(item.time);
+  });
+  return booked;
+}
+
 async function renderCalendar() {
   const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -689,7 +654,7 @@ async function renderCalendar() {
   
   currentBookedSlots = await loadBookedSlotsForMonth(year, month);
   
-  let html = `<div class="cal-header"><button class="cal-nav" onclick="prevMonth()">‹</button><div class="cal-month">${currentMonth.toLocaleString('ru',{month:'long',year:'numeric'}).toUpperCase()}</div><button class="cal-nav" onclick="nextMonth()">›</button></div><div class="cal-weekdays"><div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div>СБ</div><div>ВС</div></div><div class="cal-days">`;
+  let html = `<div class="cal-header"><button class="cal-nav" onclick="prevMonth()">‹</button><div class="cal-month">${currentMonth.toLocaleString('ru',{month:'long',year:'numeric'})}</div><button class="cal-nav" onclick="nextMonth()">›</button></div><div class="cal-weekdays"><div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div>СБ</div><div>ВС</div></div><div class="cal-days">`;
   const startOffset = firstDay === 0 ? 6 : firstDay - 1;
   for (let i = 0; i < startOffset; i++) html += `<div class="cal-day disabled"></div>`;
   
@@ -699,103 +664,81 @@ async function renderCalendar() {
     const isPast = date < today;
     const isToday = date.toDateString() === today.toDateString();
     const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
-    const bookedSlotsCount = currentBookedSlots[dateKey] ? currentBookedSlots[dateKey].length : 0;
-    const hasFreeSlots = !isPast && bookedSlotsCount < 10;
-    
+    const bookedCount = currentBookedSlots[dateKey] ? currentBookedSlots[dateKey].length : 0;
+    const hasFree = !isPast && bookedCount < 10;
     let cls = '';
     if (isPast) cls = 'disabled';
-    else if (!hasFreeSlots) cls = 'booked';
-    html += `<div class="cal-day ${cls} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="${!isPast && hasFreeSlots ? `selectDate(${year},${month},${d})` : ''}">${d}</div>`;
+    else if (!hasFree) cls = 'booked';
+    html += `<div class="cal-day ${cls} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="${!isPast && hasFree ? `selectDate(${year},${month},${d})` : ''}">${d}</div>`;
   }
   html += `</div>`;
   document.getElementById('calendar').innerHTML = html;
 }
 
 async function selectDate(y,m,d) {
-  if (isProcessing) return;
-  isProcessing = true;
   selectedDate = new Date(y,m,d);
   selectedTime = null;
   await renderCalendar();
   await renderTimeSlots();
-  setTimeout(() => { isProcessing = false; }, 500);
 }
 
 function prevMonth() { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1,1); renderCalendar(); }
 function nextMonth() { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1,1); renderCalendar(); }
 
-const allTimeSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
-
 async function renderTimeSlots() {
   const container = document.getElementById('timeSlots');
-  if (!container) return;
   if (!selectedDate) {
-    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Сначала выберите дату</div>';
+    container.innerHTML = '<div style="padding:20px;text-align:center">Сначала выберите дату</div>';
     return;
   }
   const dateKey = selectedDate.toISOString().split('T')[0];
-  const busySlots = currentBookedSlots[dateKey] || [];
-  const slotsHtml = allTimeSlots.map(slot => {
-    const isAvailable = !busySlots.includes(slot);
-    return `<div class="time-slot ${!isAvailable ? 'disabled' : ''} ${selectedTime === slot ? 'selected' : ''}" onclick="${isAvailable ? `selectTime('${slot}')` : ''}">${slot}</div>`;
-  }).join('');
-  container.innerHTML = slotsHtml;
+  const busy = currentBookedSlots[dateKey] || [];
+  container.innerHTML = allTimeSlots.map(slot => `
+    <div class="time-slot ${busy.includes(slot) ? 'disabled' : ''} ${selectedTime === slot ? 'selected' : ''}" onclick="${!busy.includes(slot) ? `selectTime('${slot}')` : ''}">${slot}</div>
+  `).join('');
 }
 
-function selectTime(slot) {
-  if (!selectedDate) return;
-  selectedTime = slot;
-  renderTimeSlots();
-}
-
-// ==================== РЕФЕРЕНСЫ ====================
-function addReference() {
-  const input = document.getElementById('refInput');
-  const url = input.value.trim();
-  if (url && !references.includes(url)) { references.push(url); renderReferences(); input.value = ''; }
-}
-function removeReference(index) { references.splice(index,1); renderReferences(); }
-function renderReferences() {
-  const container = document.getElementById('refList');
-  if (!container) return;
-  if (references.length === 0) { container.innerHTML = ''; return; }
-  container.innerHTML = references.map((ref,i) => `<div class="ref-item"><a href="${escapeHtml(ref)}" target="_blank">${escapeHtml(ref.length>40?ref.substring(0,40)+'...':ref)}</a><span class="ref-remove" onclick="removeReference(${i})">✕</span></div>`).join('');
-}
-
-document.getElementById('photoInput')?.addEventListener('change', (e) => {
-  const files = Array.from(e.target.files);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = function(ev) { referenceImages.push(ev.target.result); renderPhotoPreview(); };
-    reader.readAsDataURL(file);
-  });
-  e.target.value = '';
-});
-function removePhoto(index) { referenceImages.splice(index,1); renderPhotoPreview(); }
-function renderPhotoPreview() {
-  const container = document.getElementById('photoPreview');
-  if (!container) return;
-  if (referenceImages.length === 0) { container.innerHTML = ''; return; }
-  container.innerHTML = referenceImages.map((img,i) => `<div class="photo-item"><img src="${img}"><div class="photo-remove" onclick="removePhoto(${i})">✕</div></div>`).join('');
-}
+function selectTime(slot) { selectedTime = slot; renderTimeSlots(); }
 
 // ==================== НАВИГАЦИЯ ====================
 function updateStepsUI() {
-  document.querySelectorAll('.step').forEach((s,i) => { if(i+1 === currentStep) s.classList.add('active'); else s.classList.remove('active'); });
-  document.querySelectorAll('.step-content').forEach((c,i) => { if(i+1 === currentStep) c.classList.add('active'); else c.classList.remove('active'); });
+  document.querySelectorAll('.step').forEach((s,i) => {
+    if(i+1 === currentStep) s.classList.add('active');
+    else s.classList.remove('active');
+  });
+  document.querySelectorAll('.step-content').forEach((c,i) => {
+    if(i+1 === currentStep) c.classList.add('active');
+    else c.classList.remove('active');
+  });
 }
 
 function nextStep() {
-  if (currentStep === 1 && (!selectedService)) { document.getElementById('step1Error').innerHTML='Выберите услугу'; document.getElementById('step1Error').style.display='block'; return; }
-  if (currentStep === 1 && selectedService.name !== 'Консультация' && !selectedSize) { document.getElementById('step1Error').innerHTML='Выберите размер'; document.getElementById('step1Error').style.display='block'; return; }
-  if (currentStep === 2 && (!selectedDate || !selectedTime)) { document.getElementById('step2Error').innerHTML='Выберите дату и время'; document.getElementById('step2Error').style.display='block'; return; }
+  if (currentStep === 1 && !selectedService) {
+    document.getElementById('step1Error').innerHTML = 'Выберите услугу';
+    document.getElementById('step1Error').style.display = 'block';
+    return;
+  }
+  if (currentStep === 1 && selectedService.name !== 'Консультация' && !selectedSize) {
+    document.getElementById('step1Error').innerHTML = 'Выберите размер';
+    document.getElementById('step1Error').style.display = 'block';
+    return;
+  }
+  if (currentStep === 2 && (!selectedDate || !selectedTime)) {
+    document.getElementById('step2Error').innerHTML = 'Выберите дату и время';
+    document.getElementById('step2Error').style.display = 'block';
+    return;
+  }
   if (currentStep === 3) {
     const name = document.getElementById('clientName').value.trim();
     const phone = document.getElementById('clientPhone').value.trim();
-    if (!name || !phone) { document.getElementById('step3Error').innerHTML='Заполните имя и телефон'; document.getElementById('step3Error').style.display='block'; return; }
+    if (!name || !phone) {
+      document.getElementById('step3Error').innerHTML = 'Заполните имя и телефон';
+      document.getElementById('step3Error').style.display = 'block';
+      return;
+    }
     renderSummary();
   }
-  document.querySelectorAll('.error').forEach(e=>e.style.display='none');
+  document.querySelectorAll('.error').forEach(e => e.style.display = 'none');
   currentStep++;
   updateStepsUI();
   window.scrollTo(0,0);
@@ -805,30 +748,26 @@ function prevStep() { currentStep--; updateStepsUI(); window.scrollTo(0,0); }
 
 function renderSummary() {
   const summary = document.getElementById('summary');
-  if (!summary) return;
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
-  let photosHtml = '';
-  if (referenceImages.length > 0) {
-    photosHtml = `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px"><span>Фото референсы:</span><div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px">${referenceImages.map(img => `<img src="${img}" style="width:60px; height:60px; object-fit:cover; border:1px solid var(--border)">`).join('')}</div></div>`;
-  }
   summary.innerHTML = `
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Услуга:</span><strong>${selectedService?.name||'—'}</strong></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Размер:</span><strong>${selectedSize||(selectedService?.name==='Консультация'?'—':'Не выбран')}</strong></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Дата:</span><strong>${dateStr}</strong></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Время:</span><strong>${selectedTime||'—'}</strong></div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:12px"><span>Место:</span><strong>${document.getElementById('clientPlace').value||'—'}</strong></div>
-    <div style="display:flex; justify-content:space-between"><span>Стоимость:</span><strong>${selectedService?.price||'—'}</strong></div>
-    ${references.length>0 ? `<div style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px"><span>Ссылки:</span><div style="margin-top:8px">${references.map(ref=>`<a href="${ref}" target="_blank" style="color:var(--text-muted); display:block; font-size:11px">${ref}</a>`).join('')}</div></div>` : ''}
-    ${photosHtml}
+    <div>Услуга: <strong>${selectedService?.name || '—'}</strong></div>
+    <div>Размер: <strong>${selectedSize || (selectedService?.name === 'Консультация' ? '—' : 'Не выбран')}</strong></div>
+    <div>Дата: <strong>${dateStr}</strong></div>
+    <div>Время: <strong>${selectedTime || '—'}</strong></div>
+    <div>Место: <strong>${document.getElementById('clientPlace').value || '—'}</strong></div>
+    <div>Стоимость: <strong>${selectedService?.price || '—'}</strong></div>
   `;
 }
 
 // ==================== ОТПРАВКА ЗАЯВКИ ====================
+async function bookSlotDB(date, time) {
+  const dateKey = date.toISOString().split('T')[0];
+  const { error } = await supabase.from('slots').insert([{ date: dateKey, time: time }]);
+  return !error;
+}
+
 async function submitBooking() {
-  if (isProcessing) { showNotification('⏳ Подождите, предыдущая операция ещё выполняется...'); return; }
-  isProcessing = true;
-  
   const name = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
   const place = document.getElementById('clientPlace').value;
@@ -836,135 +775,187 @@ async function submitBooking() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   
-  const available = await isSlotAvailable(selectedDate, selectedTime);
-  if (!available) {
-    showNotification('❌ Это время уже занято. Выберите другое.');
-    await renderTimeSlots();
-    isProcessing = false;
-    return;
-  }
-  
-  const booked = await bookSlot(selectedDate, selectedTime);
+  // Бронируем слот
+  const booked = await bookSlotDB(selectedDate, selectedTime);
   if (!booked) {
-    showNotification('❌ Не удалось забронировать слот. Попробуйте другое время.');
-    await renderTimeSlots();
-    isProcessing = false;
+    showNotification('❌ Не удалось забронировать слот');
     return;
   }
   
-  const newBooking = {
-    name, phone, service: selectedService?.name,
-    size: selectedSize || (selectedService?.name === 'Консультация' ? 'Не требуется' : ''),
-    price: selectedService?.price,
-    date: selectedDate ? selectedDate.toISOString() : null,
-    time: selectedTime || null, place: place || null, idea: idea || null,
-    ref_links: references, ref_images: referenceImages,
-    tg_user: tgUserInfo, tg_user_id: tgUserId, status: 'new', reminder_sent: false
-  };
+  // Сохраняем запись
+  const { error } = await supabase.from('bookings').insert([{
+    name, phone, service: selectedService?.name, size: selectedSize,
+    price: selectedService?.price, date: selectedDate?.toISOString(), time: selectedTime,
+    place, idea, tg_user: tgUserInfo, tg_user_id: tgUserId, status: 'new'
+  }]);
   
-  const savedBooking = await saveBookingToSupabase(newBooking);
+  if (error) {
+    showNotification('❌ Ошибка сохранения записи');
+    return;
+  }
   
-  let message = `🖤 НОВАЯ ЗАЯВКА НА ТАТУ 🖤\n\n📋 Услуга: ${selectedService?.name}\n📐 Размер: ${selectedSize||(selectedService?.name==='Консультация'?'Не требуется':'—')}\n💰 Стоимость: ${selectedService?.price}\n\n📅 Дата: ${dateStr}\n⏰ Время: ${selectedTime||'—'}\n📍 Место: ${place||'Не указано'}\n\n👤 Клиент: ${name}\n📞 Телефон: ${phone}\n✈️ Telegram: ${tgUserInfo}\n\n💬 Идея: ${idea||'Не указано'}`;
-  if (references.length > 0) message += `\n\n📎 Ссылки-референсы:\n${references.join('\n')}`;
+  // Отправляем в Telegram
+  const msg = `🖤 НОВАЯ ЗАЯВКА 🖤\n\n👤 Клиент: ${name}\n📞 Телефон: ${phone}\n✈️ Telegram: ${tgUserInfo}\n📋 Услуга: ${selectedService?.name}\n📐 Размер: ${selectedSize || '—'}\n📅 Дата: ${dateStr}\n⏰ Время: ${selectedTime}\n📍 Место: ${place}\n💬 Идея: ${idea || '—'}`;
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: CHAT_ID, text: msg }) });
   
-  const btn = event.target;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="loader"></span> ОТПРАВЛЯЮ...';
-  
-  try {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: CHAT_ID, text: message }) });
-    for (let i = 0; i < referenceImages.length; i++) {
-      const blob = await (await fetch(referenceImages[i])).blob();
-      const formData = new FormData();
-      formData.append('chat_id', CHAT_ID);
-      formData.append('photo', blob, `ref_${i}.jpg`);
-      formData.append('caption', i === 0 ? '📸 Фото-референсы клиента:' : '');
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-    }
-    
-    const clientMessage = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${dateStr}\n⏰ ${selectedTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selectedService?.name}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\n⚠️ ВНИМАНИЕ: Слот забронирован. Если нужно отменить запись, нажмите кнопку ниже.`;
-    const keyboard = { inline_keyboard: [[{ text: '❌ ОТМЕНИТЬ ЗАПИСЬ', callback_data: JSON.stringify({ action: 'cancel', bookingId: savedBooking.id }) }]] };
-    if (tgUserId) {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: tgUserId, text: clientMessage, reply_markup: keyboard })
-      });
-    }
-    
-    showNotification('✅ Заявка отправлена! Слот забронирован.');
-    resetForm();
-    await refreshBookingsHistory();
-  } catch(e) { console.error(e); showNotification('❌ Ошибка отправки, но слот забронирован.'); }
-  btn.disabled = false;
-  btn.innerHTML = 'ОТПРАВИТЬ';
-  isProcessing = false;
+  showNotification('✅ Заявка отправлена!');
+  resetForm();
 }
 
 function resetForm() {
   selectedService = null; selectedSize = null; selectedDate = null; selectedTime = null;
-  references = []; referenceImages = []; currentStep = 1;
+  currentStep = 1;
   if(tgUser) document.getElementById('clientName').value = `${tgUser.first_name||''} ${tgUser.last_name||''}`.trim();
   else document.getElementById('clientName').value = '';
-  document.getElementById('clientPhone').value = ''; document.getElementById('clientPlace').value = '';
-  document.getElementById('clientIdea').value = ''; document.getElementById('refInput').value = '';
-  renderReferences(); renderPhotoPreview(); renderServices(); renderSizes(); renderCalendar(); renderTimeSlots(); updateStepsUI();
-  const sizesGroup = document.getElementById('sizesGroup');
-  if (sizesGroup) sizesGroup.style.display = 'block';
+  document.getElementById('clientPhone').value = '';
+  document.getElementById('clientPlace').value = '';
+  document.getElementById('clientIdea').value = '';
+  renderServices(); renderSizes(); renderCalendar(); renderTimeSlots(); updateStepsUI();
 }
 
 function showNotification(msg) {
-  const notif = document.createElement('div'); notif.className = 'notification'; notif.innerHTML = msg;
-  document.body.appendChild(notif); setTimeout(() => notif.remove(), 3000);
+  const n = document.createElement('div'); n.className = 'notification'; n.innerHTML = msg;
+  document.body.appendChild(n); setTimeout(() => n.remove(), 3000);
 }
 
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+// ==================== ПОРТФОЛИО ====================
+async function loadPortfolio() {
+  const { data } = await supabase.from('portfolio').select('*').order('created_at', { ascending: false });
+  if (data) portfolio = data;
+  renderPortfolio();
+  renderAdminPortfolio();
+}
 
+function renderPortfolio() {
+  const grid = document.getElementById('portfolioGrid');
+  if (!grid) return;
+  if (portfolio.length === 0) { grid.innerHTML = '<div>Портфолио пополняется...</div>'; return; }
+  grid.innerHTML = portfolio.map(item => `
+    <div class="portfolio-item">
+      <img class="portfolio-img" src="${item.image}" onerror="this.src='https://placehold.co/400x300/222?text=ERROR'">
+      <div class="portfolio-info">
+        <div class="portfolio-title">${item.title}</div>
+        <div class="portfolio-desc">${item.description || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminPortfolio() {
+  const list = document.getElementById('adminPortfolioList');
+  if (!list) return;
+  if (portfolio.length === 0) { list.innerHTML = '<div>Нет работ</div>'; return; }
+  list.innerHTML = portfolio.map(item => `
+    <div style="display:flex; justify-content:space-between; background:#111; padding:10px; margin-bottom:5px;">
+      <div><strong>${item.title}</strong><br><small>${item.description || ''}</small></div>
+      <button onclick="deletePortfolioItem('${item.id}')" style="background:#2a2a2a; border:none; padding:5px 10px; cursor:pointer;">УДАЛИТЬ</button>
+    </div>
+  `).join('');
+}
+
+async function addPortfolioItem() {
+  const title = document.getElementById('adminTitle').value.trim();
+  const desc = document.getElementById('adminDesc').value.trim();
+  const file = document.getElementById('adminImageFile').files[0];
+  if (!title || !file) { showNotification('Заполните название и выберите фото'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    await supabase.from('portfolio').insert([{ title, image: e.target.result, description: desc }]);
+    await loadPortfolio();
+    document.getElementById('adminTitle').value = '';
+    document.getElementById('adminDesc').value = '';
+    document.getElementById('adminImageFile').value = '';
+    showNotification('✅ Работа добавлена');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function deletePortfolioItem(id) {
+  if (confirm('Удалить?')) {
+    await supabase.from('portfolio').delete().eq('id', id);
+    await loadPortfolio();
+  }
+}
+
+// ==================== ИСТОРИЯ ЗАПИСЕЙ ====================
+async function loadBookingsHistory() {
+  const { data } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+  if (data) allBookings = data;
+  renderBookingsHistory();
+}
+
+function renderBookingsHistory() {
+  const container = document.getElementById('bookingsHistoryList');
+  if (!container) return;
+  if (allBookings.length === 0) { container.innerHTML = '<div>История записей пуста</div>'; return; }
+  container.innerHTML = allBookings.map(b => `
+    <div style="background:#111; padding:10px; margin-bottom:5px; border:1px solid #222;">
+      <div><strong>${b.name}</strong> | ${b.phone}</div>
+      <div>${b.service || '—'} | ${b.date ? new Date(b.date).toLocaleDateString() : '—'} ${b.time || ''}</div>
+      <div>Статус: ${b.status === 'cancelled' ? 'ОТМЕНЕНА' : (b.status === 'confirmed' ? 'ПОДТВЕРЖДЕНА' : 'НОВАЯ')}</div>
+      ${b.status !== 'cancelled' ? `<button onclick="cancelBooking('${b.id}')" style="margin-top:5px; background:#2a2a2a; border:none; padding:5px 10px; cursor:pointer;">ОТМЕНИТЬ</button>` : ''}
+    </div>
+  `).join('');
+}
+
+async function cancelBooking(id) {
+  await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
+  await loadBookingsHistory();
+  showNotification('Запись отменена');
+}
+
+// ==================== АДМИНКА ====================
+let clickCount = 0, clickTimer = null;
+document.getElementById('logo').addEventListener('click', () => {
+  clickCount++;
+  if (clickTimer) clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+  if (clickCount >= 15) {
+    clickCount = 0;
+    const pwd = prompt('Пароль администратора:');
+    if (pwd === ADMIN_PASSWORD) {
+      localStorage.setItem('isAdmin', 'true');
+      document.getElementById('adminNavBtn').style.display = 'block';
+      showNotification('Админ-панель активирована');
+      loadBookingsHistory();
+    } else if (pwd !== null) showNotification('Неверный пароль');
+    clearTimeout(clickTimer);
+  }
+});
+if (localStorage.getItem('isAdmin') === 'true') document.getElementById('adminNavBtn').style.display = 'block';
+
+// ==================== НАВИГАЦИЯ ПАНЕЛЕЙ ====================
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const panel = btn.dataset.panel;
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    if(panel==='booking') document.getElementById('panelBooking').classList.add('active');
-    if(panel==='portfolio') document.getElementById('panelPortfolio').classList.add('active');
-    if(panel==='admin') { document.getElementById('panelAdmin').classList.add('active'); refreshBookingsHistory(); }
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    if (btn.dataset.panel === 'booking') document.getElementById('panelBooking').classList.add('active');
+    if (btn.dataset.panel === 'portfolio') document.getElementById('panelPortfolio').classList.add('active');
+    if (btn.dataset.panel === 'admin') {
+      document.getElementById('panelAdmin').classList.add('active');
+      loadBookingsHistory();
+    }
   });
 });
 
-window.cancelBooking = cancelBooking;
-
-async function checkReminders() {
-  const now = new Date();
-  const bookings = await getAllBookingsFromSupabase();
-  for (const booking of bookings) {
-    if (booking.status === 'cancelled') continue;
-    if (!booking.date) continue;
-    const bookingDate = new Date(booking.date);
-    const diffDays = Math.ceil((bookingDate - now) / (1000 * 60 * 60 * 24));
-    if (diffDays === 1 && !booking.reminder_sent) {
-      try {
-        await supabase.from('bookings').update({ reminder_sent: true }).eq('id', booking.id);
-        if (booking.tg_user_id) {
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: booking.tg_user_id, text: `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_GEO_URL}\n\nДо встречи!` })
-          });
-        }
-      } catch(e) { console.error('Reminder error:', e); }
-    }
+document.getElementById('addPortfolioBtn')?.addEventListener('click', addPortfolioItem);
+document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
+  const preview = document.getElementById('adminPreview');
+  if (!preview) return;
+  if (e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; margin-top:10px;">`; };
+    reader.readAsDataURL(e.target.files[0]);
   }
-}
-setInterval(checkReminders, 60 * 60 * 1000);
-checkReminders();
+});
 
-async function init() {
-  await refreshPortfolio();
-  await refreshBookingsHistory();
-  renderServices();
-  renderSizes();
-  await renderCalendar();
-}
-init();
+// ==================== ЗАПУСК ====================
+renderServices();
+renderSizes();
+renderCalendar();
+loadPortfolio();
+loadBookingsHistory();
 </script>
 </body>
 </html>
