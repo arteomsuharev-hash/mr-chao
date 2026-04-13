@@ -7,390 +7,72 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  background: #050505;
-  color: #e0e0e0;
-  font-family: system-ui, -apple-system, sans-serif;
-  padding: 20px;
-}
-
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.header {
-  text-align: center;
-  padding: 20px 0;
-  border-bottom: 1px solid #1a1a1a;
-  margin-bottom: 20px;
-}
-
-.logo {
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.logo h1 {
-  font-size: 36px;
-  letter-spacing: 4px;
-  background: linear-gradient(135deg, #fff, #888);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.logo p {
-  font-size: 11px;
-  color: #666;
-}
-
-.user-info {
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  padding: 8px 16px;
-  margin-top: 10px;
-  font-size: 13px;
-}
-
-.nav {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-}
-
-.nav-btn {
-  flex: 1;
-  padding: 12px;
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  color: #666;
-  font-weight: bold;
-  cursor: pointer;
-  text-align: center;
-}
-
-.nav-btn.active {
-  background: #2a2a2a;
-  color: #fff;
-}
-
-.panel {
-  display: none;
-}
-
-.panel.active {
-  display: block;
-}
-
-.master-bio {
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.master-bio h3 {
-  margin-bottom: 10px;
-  color: #fff;
-}
-
-.master-bio p {
-  color: #888;
-  line-height: 1.6;
-  font-size: 14px;
-}
-
-.booking-card {
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  padding: 20px;
-}
-
-.steps {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #1a1a1a;
-}
-
-.step {
-  flex: 1;
-  padding: 10px;
-  text-align: center;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-}
-
-.step.active {
-  border-bottom-color: #2a2a2a;
-}
-
-.step-num {
-  font-size: 18px;
-  font-weight: bold;
-  color: #666;
-}
-
-.step.active .step-num {
-  color: #fff;
-}
-
-.step-label {
-  font-size: 10px;
-  color: #666;
-}
-
-.step-content {
-  display: none;
-}
-
-.step-content.active {
-  display: block;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-label {
-  display: block;
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-input, select, textarea {
-  width: 100%;
-  padding: 12px;
-  background: #111;
-  border: 1px solid #222;
-  color: #fff;
-  font-size: 14px;
-}
-
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.service-card {
-  background: #111;
-  border: 1px solid #222;
-  padding: 12px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.service-card.selected {
-  border-color: #666;
-  background: #1a1a1a;
-}
-
-.service-name {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.service-price {
-  font-size: 12px;
-  color: #666;
-}
-
-.sizes {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 15px;
-}
-
-.size-btn {
-  padding: 8px 16px;
-  background: #111;
-  border: 1px solid #222;
-  cursor: pointer;
-}
-
-.size-btn.selected {
-  border-color: #666;
-  background: #1a1a1a;
-}
-
-.calendar {
-  background: #111;
-  border: 1px solid #222;
-  margin-bottom: 15px;
-}
-
-.cal-header {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid #222;
-}
-
-.cal-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  padding: 10px;
-  text-align: center;
-  font-size: 11px;
-  color: #666;
-}
-
-.cal-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  padding: 10px;
-  gap: 4px;
-}
-
-.cal-day {
-  padding: 8px;
-  text-align: center;
-  cursor: pointer;
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-}
-
-.cal-day.disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.cal-day.booked {
-  opacity: 0.3;
-  text-decoration: line-through;
-  cursor: not-allowed;
-}
-
-.cal-day.selected {
-  background: #2a2a2a;
-  border-color: #666;
-}
-
-.time-slots {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.time-slot {
-  padding: 10px;
-  text-align: center;
-  background: #111;
-  border: 1px solid #222;
-  cursor: pointer;
-}
-
-.time-slot.selected {
-  background: #2a2a2a;
-  border-color: #666;
-}
-
-.time-slot.disabled {
-  opacity: 0.3;
-  text-decoration: line-through;
-  cursor: not-allowed;
-}
-
-.btn {
-  width: 100%;
-  padding: 14px;
-  background: #2a2a2a;
-  border: none;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1px solid #2a2a2a;
-  margin-top: 5px;
-}
-
-.admin-section {
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.portfolio-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.portfolio-item {
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  overflow: hidden;
-}
-
-.portfolio-img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  background: #111;
-}
-
-.portfolio-info {
-  padding: 12px;
-}
-
-.portfolio-title {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.portfolio-desc {
-  font-size: 12px;
-  color: #666;
-}
-
-.notification {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  padding: 10px 20px;
-  z-index: 1000;
-}
-
-footer {
-  margin-top: 40px;
-  padding: 20px;
-  text-align: center;
-  border-top: 1px solid #1a1a1a;
-  color: #666;
-  font-size: 12px;
-}
-
-.loader {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #fff;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050505;color:#e0e0e0;font-family:system-ui,sans-serif;padding:20px;}
+.container{max-width:600px;margin:0 auto;}
+.header{text-align:center;padding:20px 0;border-bottom:1px solid #1a1a1a;margin-bottom:20px;}
+.logo{cursor:pointer;margin-bottom:10px;}
+.logo h1{font-size:36px;letter-spacing:4px;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo p{font-size:11px;color:#666;}
+.user-info{background:#0a0a0a;border:1px solid #1a1a1a;padding:8px 16px;margin-top:10px;font-size:13px;}
+.nav{display:flex;gap:4px;margin-bottom:20px;}
+.nav-btn{flex:1;padding:12px;background:#0a0a0a;border:1px solid #1a1a1a;color:#666;font-weight:bold;cursor:pointer;text-align:center;}
+.nav-btn.active{background:#2a2a2a;color:#fff;}
+.panel{display:none;}
+.panel.active{display:block;}
+.master-bio{background:#0a0a0a;border:1px solid #1a1a1a;padding:20px;margin-bottom:20px;}
+.master-bio h3{margin-bottom:10px;color:#fff;}
+.master-bio p{color:#888;line-height:1.6;font-size:14px;}
+.booking-card{background:#0a0a0a;border:1px solid #1a1a1a;padding:20px;}
+.steps{display:flex;margin-bottom:20px;border-bottom:1px solid #1a1a1a;}
+.step{flex:1;padding:10px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;}
+.step.active{border-bottom-color:#2a2a2a;}
+.step-num{font-size:18px;font-weight:bold;color:#666;}
+.step.active .step-num{color:#fff;}
+.step-label{font-size:10px;color:#666;}
+.step-content{display:none;}
+.step-content.active{display:block;}
+.form-group{margin-bottom:15px;}
+label{display:block;font-size:11px;color:#666;margin-bottom:5px;}
+input,select,textarea{width:100%;padding:12px;background:#111;border:1px solid #222;color:#fff;font-size:14px;}
+.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px;}
+.service-card{background:#111;border:1px solid #222;padding:12px;cursor:pointer;text-align:center;}
+.service-card.selected{border-color:#666;background:#1a1a1a;}
+.service-name{font-weight:bold;margin-bottom:5px;}
+.service-price{font-size:12px;color:#666;}
+.sizes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;}
+.size-btn{padding:8px 16px;background:#111;border:1px solid #222;cursor:pointer;}
+.size-btn.selected{border-color:#666;background:#1a1a1a;}
+.calendar{background:#111;border:1px solid #222;margin-bottom:15px;}
+.cal-header{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #222;}
+.cal-month{font-weight:bold;}
+.cal-nav{background:#222;border:none;color:#fff;padding:5px 10px;cursor:pointer;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:10px;text-align:center;font-size:11px;color:#666;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);padding:10px;gap:4px;}
+.cal-day{padding:8px;text-align:center;cursor:pointer;background:#0a0a0a;border:1px solid #1a1a1a;}
+.cal-day.disabled{opacity:0.3;cursor:not-allowed;}
+.cal-day.booked{opacity:0.3;text-decoration:line-through;cursor:not-allowed;}
+.cal-day.selected{background:#2a2a2a;border-color:#666;}
+.cal-day.today{border-color:#666;}
+.time-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px;}
+.time-slot{padding:10px;text-align:center;background:#111;border:1px solid #222;cursor:pointer;}
+.time-slot.selected{background:#2a2a2a;border-color:#666;}
+.time-slot.disabled{opacity:0.3;text-decoration:line-through;cursor:not-allowed;}
+.btn{width:100%;padding:14px;background:#2a2a2a;border:none;color:#fff;font-weight:bold;cursor:pointer;margin-top:10px;}
+.btn-secondary{background:transparent;border:1px solid #2a2a2a;margin-top:5px;}
+.admin-section{background:#0a0a0a;border:1px solid #1a1a1a;padding:20px;margin-bottom:20px;}
+.admin-section h3{margin-bottom:15px;}
+.portfolio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;margin-bottom:20px;}
+.portfolio-item{background:#0a0a0a;border:1px solid #1a1a1a;overflow:hidden;}
+.portfolio-img{width:100%;height:250px;object-fit:cover;background:#111;}
+.portfolio-info{padding:12px;}
+.portfolio-title{font-weight:bold;margin-bottom:5px;}
+.portfolio-desc{font-size:12px;color:#666;}
+.notification{position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #333;padding:10px 20px;z-index:1000;}
+footer{margin-top:40px;padding:20px;text-align:center;border-top:1px solid #1a1a1a;color:#666;font-size:12px;}
+.loader{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.image-upload-label{display:inline-block;background:#2a2a2a;padding:12px;margin:10px 0;cursor:pointer;text-align:center;width:100%;}
 </style>
 </head>
 <body>
@@ -458,7 +140,7 @@ footer {
       <div class="step-content" data-content="3">
         <div class="form-group">
           <label>ВАШЕ ИМЯ</label>
-          <input type="text" id="clientName">
+          <input type="text" id="clientName" placeholder="Как к вам обращаться?">
         </div>
         <div class="form-group">
           <label>ТЕЛЕФОН</label>
@@ -473,7 +155,7 @@ footer {
         </div>
         <div class="form-group">
           <label>ИДЕЯ / ОПИСАНИЕ</label>
-          <textarea id="clientIdea" rows="3"></textarea>
+          <textarea id="clientIdea" rows="3" placeholder="Опишите идею..."></textarea>
         </div>
         <div id="step3Error" style="color:#cc0000; font-size:12px; margin-top:10px; display:none"></div>
         <button class="btn" onclick="nextStep()">ДАЛЕЕ →</button>
@@ -498,10 +180,12 @@ footer {
   <div class="panel" id="panelAdmin">
     <div class="admin-section">
       <h3>ДОБАВИТЬ РАБОТУ</h3>
-      <input type="text" id="adminTitle" placeholder="Название">
-      <label class="image-upload-label" style="display:inline-block; background:#2a2a2a; padding:12px; margin:10px 0; cursor:pointer;">ВЫБРАТЬ ФОТО
+      <input type="text" id="adminTitle" placeholder="Название работы">
+      <label class="image-upload-label">
+        ВЫБРАТЬ ФОТО
         <input type="file" id="adminImageFile" accept="image/*" style="display:none;">
       </label>
+      <div id="adminPreview"></div>
       <textarea id="adminDesc" rows="2" placeholder="Описание"></textarea>
       <button class="btn" id="addPortfolioBtn">ДОБАВИТЬ</button>
     </div>
@@ -530,16 +214,8 @@ const BOT_TOKEN = '8770410681:AAGPYDmTWSE5m95LdlvvLk4tCoECHsfAedU';
 const CHAT_ID = '1085941747';
 const ADMIN_PASSWORD = 'chao123';
 
+// Инициализация Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ==================== ПРОВЕРКА ПОДКЛЮЧЕНИЯ ====================
-(async function testConnection() {
-  console.log('=== TELEGRAM MINI APP ===');
-  console.log('Supabase URL:', SUPABASE_URL);
-  const { data, error } = await supabase.from('slots').select('count');
-  if (error) console.error('Supabase connection error:', error);
-  else console.log('Supabase connected!', data);
-})();
 
 // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
 let currentStep = 1;
@@ -556,6 +232,15 @@ let portfolio = [];
 let currentBookedSlots = {};
 
 const allTimeSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+
+// ==================== ПРОВЕРКА ПОДКЛЮЧЕНИЯ ====================
+(async function testConnection() {
+  console.log('=== TELEGRAM MINI APP ===');
+  console.log('Supabase URL:', SUPABASE_URL);
+  const { data, error } = await supabase.from('slots').select('count');
+  if (error) console.error('Supabase connection error:', error);
+  else console.log('Supabase connected!', data);
+})();
 
 // ==================== TELEGRAM ПОЛЬЗОВАТЕЛЬ ====================
 try {
@@ -687,8 +372,9 @@ function nextMonth() { currentMonth = new Date(currentMonth.getFullYear(), curre
 
 async function renderTimeSlots() {
   const container = document.getElementById('timeSlots');
+  if (!container) return;
   if (!selectedDate) {
-    container.innerHTML = '<div style="padding:20px;text-align:center">Сначала выберите дату</div>';
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:#666">Сначала выберите дату</div>';
     return;
   }
   const dateKey = selectedDate.toISOString().split('T')[0];
@@ -751,11 +437,11 @@ function renderSummary() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   summary.innerHTML = `
-    <div>Услуга: <strong>${selectedService?.name || '—'}</strong></div>
-    <div>Размер: <strong>${selectedSize || (selectedService?.name === 'Консультация' ? '—' : 'Не выбран')}</strong></div>
-    <div>Дата: <strong>${dateStr}</strong></div>
-    <div>Время: <strong>${selectedTime || '—'}</strong></div>
-    <div>Место: <strong>${document.getElementById('clientPlace').value || '—'}</strong></div>
+    <div style="margin-bottom:8px">Услуга: <strong>${selectedService?.name || '—'}</strong></div>
+    <div style="margin-bottom:8px">Размер: <strong>${selectedSize || (selectedService?.name === 'Консультация' ? '—' : 'Не выбран')}</strong></div>
+    <div style="margin-bottom:8px">Дата: <strong>${dateStr}</strong></div>
+    <div style="margin-bottom:8px">Время: <strong>${selectedTime || '—'}</strong></div>
+    <div style="margin-bottom:8px">Место: <strong>${document.getElementById('clientPlace').value || '—'}</strong></div>
     <div>Стоимость: <strong>${selectedService?.price || '—'}</strong></div>
   `;
 }
@@ -774,6 +460,14 @@ async function submitBooking() {
   const idea = document.getElementById('clientIdea').value;
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
+  
+  // Проверяем слот
+  const dateKey = selectedDate.toISOString().split('T')[0];
+  const { data: existing } = await supabase.from('slots').select('*').eq('date', dateKey).eq('time', selectedTime);
+  if (existing.length > 0) {
+    showNotification('❌ Это время уже занято');
+    return;
+  }
   
   // Бронируем слот
   const booked = await bookSlotDB(selectedDate, selectedTime);
@@ -798,7 +492,7 @@ async function submitBooking() {
   const msg = `🖤 НОВАЯ ЗАЯВКА 🖤\n\n👤 Клиент: ${name}\n📞 Телефон: ${phone}\n✈️ Telegram: ${tgUserInfo}\n📋 Услуга: ${selectedService?.name}\n📐 Размер: ${selectedSize || '—'}\n📅 Дата: ${dateStr}\n⏰ Время: ${selectedTime}\n📍 Место: ${place}\n💬 Идея: ${idea || '—'}`;
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: CHAT_ID, text: msg }) });
   
-  showNotification('✅ Заявка отправлена!');
+  showNotification('✅ Заявка отправлена! Слот забронирован.');
   resetForm();
 }
 
@@ -829,13 +523,13 @@ async function loadPortfolio() {
 function renderPortfolio() {
   const grid = document.getElementById('portfolioGrid');
   if (!grid) return;
-  if (portfolio.length === 0) { grid.innerHTML = '<div>Портфолио пополняется...</div>'; return; }
+  if (portfolio.length === 0) { grid.innerHTML = '<div style="text-align:center;padding:40px;">Портфолио пополняется...</div>'; return; }
   grid.innerHTML = portfolio.map(item => `
     <div class="portfolio-item">
       <img class="portfolio-img" src="${item.image}" onerror="this.src='https://placehold.co/400x300/222?text=ERROR'">
       <div class="portfolio-info">
-        <div class="portfolio-title">${item.title}</div>
-        <div class="portfolio-desc">${item.description || ''}</div>
+        <div class="portfolio-title">${escapeHtml(item.title)}</div>
+        <div class="portfolio-desc">${escapeHtml(item.description || '')}</div>
       </div>
     </div>
   `).join('');
@@ -846,8 +540,8 @@ function renderAdminPortfolio() {
   if (!list) return;
   if (portfolio.length === 0) { list.innerHTML = '<div>Нет работ</div>'; return; }
   list.innerHTML = portfolio.map(item => `
-    <div style="display:flex; justify-content:space-between; background:#111; padding:10px; margin-bottom:5px;">
-      <div><strong>${item.title}</strong><br><small>${item.description || ''}</small></div>
+    <div style="display:flex; justify-content:space-between; background:#111; padding:10px; margin-bottom:5px; border:1px solid #222;">
+      <div><strong>${escapeHtml(item.title)}</strong><br><small>${escapeHtml(item.description || '')}</small></div>
       <button onclick="deletePortfolioItem('${item.id}')" style="background:#2a2a2a; border:none; padding:5px 10px; cursor:pointer;">УДАЛИТЬ</button>
     </div>
   `).join('');
@@ -865,17 +559,29 @@ async function addPortfolioItem() {
     document.getElementById('adminTitle').value = '';
     document.getElementById('adminDesc').value = '';
     document.getElementById('adminImageFile').value = '';
+    document.getElementById('adminPreview').innerHTML = '';
     showNotification('✅ Работа добавлена');
   };
   reader.readAsDataURL(file);
 }
 
 async function deletePortfolioItem(id) {
-  if (confirm('Удалить?')) {
+  if (confirm('Удалить эту работу?')) {
     await supabase.from('portfolio').delete().eq('id', id);
     await loadPortfolio();
+    showNotification('✅ Работа удалена');
   }
 }
+
+// Превью фото
+document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
+  const preview = document.getElementById('adminPreview');
+  if (e.target.files && e.target.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (ev) => { if(preview) preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; margin-top:10px; border:1px solid #222;">`; };
+    reader.readAsDataURL(e.target.files[0]);
+  }
+});
 
 // ==================== ИСТОРИЯ ЗАПИСЕЙ ====================
 async function loadBookingsHistory() {
@@ -890,8 +596,8 @@ function renderBookingsHistory() {
   if (allBookings.length === 0) { container.innerHTML = '<div>История записей пуста</div>'; return; }
   container.innerHTML = allBookings.map(b => `
     <div style="background:#111; padding:10px; margin-bottom:5px; border:1px solid #222;">
-      <div><strong>${b.name}</strong> | ${b.phone}</div>
-      <div>${b.service || '—'} | ${b.date ? new Date(b.date).toLocaleDateString() : '—'} ${b.time || ''}</div>
+      <div><strong>${escapeHtml(b.name)}</strong> | ${escapeHtml(b.phone)}</div>
+      <div>${escapeHtml(b.service || '—')} | ${b.date ? new Date(b.date).toLocaleDateString() : '—'} ${b.time || ''}</div>
       <div>Статус: ${b.status === 'cancelled' ? 'ОТМЕНЕНА' : (b.status === 'confirmed' ? 'ПОДТВЕРЖДЕНА' : 'НОВАЯ')}</div>
       ${b.status !== 'cancelled' ? `<button onclick="cancelBooking('${b.id}')" style="margin-top:5px; background:#2a2a2a; border:none; padding:5px 10px; cursor:pointer;">ОТМЕНИТЬ</button>` : ''}
     </div>
@@ -901,7 +607,7 @@ function renderBookingsHistory() {
 async function cancelBooking(id) {
   await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', id);
   await loadBookingsHistory();
-  showNotification('Запись отменена');
+  showNotification('✅ Запись отменена');
 }
 
 // ==================== АДМИНКА ====================
@@ -912,17 +618,19 @@ document.getElementById('logo').addEventListener('click', () => {
   clickTimer = setTimeout(() => { clickCount = 0; }, 800);
   if (clickCount >= 15) {
     clickCount = 0;
-    const pwd = prompt('Пароль администратора:');
+    const pwd = prompt('Введите пароль администратора:');
     if (pwd === ADMIN_PASSWORD) {
       localStorage.setItem('isAdmin', 'true');
       document.getElementById('adminNavBtn').style.display = 'block';
-      showNotification('Админ-панель активирована');
+      showNotification('✅ Админ-панель активирована');
       loadBookingsHistory();
-    } else if (pwd !== null) showNotification('Неверный пароль');
+    } else if (pwd !== null) showNotification('❌ Неверный пароль');
     clearTimeout(clickTimer);
   }
 });
-if (localStorage.getItem('isAdmin') === 'true') document.getElementById('adminNavBtn').style.display = 'block';
+if (localStorage.getItem('isAdmin') === 'true') {
+  document.getElementById('adminNavBtn').style.display = 'block';
+}
 
 // ==================== НАВИГАЦИЯ ПАНЕЛЕЙ ====================
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -940,15 +648,8 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 
 document.getElementById('addPortfolioBtn')?.addEventListener('click', addPortfolioItem);
-document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
-  const preview = document.getElementById('adminPreview');
-  if (!preview) return;
-  if (e.target.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; margin-top:10px;">`; };
-    reader.readAsDataURL(e.target.files[0]);
-  }
-});
+
+function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
 // ==================== ЗАПУСК ====================
 renderServices();
