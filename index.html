@@ -61,8 +61,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-lig
 .size-btn{padding:10px 20px;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
 .size-btn.selected{border-color:var(--gray-light);background:var(--gray);}
 .size-btn.hidden{display:none;}
-.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;}
-.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);}
+.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
 .cal-month{font-family:'Bebas Neue',sans-serif;font-size:20px;}
 .cal-nav{background:var(--bg-card);border:1px solid var(--border);padding:6px 12px;cursor:pointer;transition:all 0.2s;}
 .cal-nav:hover{background:var(--gray);}
@@ -143,6 +143,11 @@ footer p:last-child{font-size:11px;}
   .step-label{font-size:8px;}
   .time-slots{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));}
   .booking-history-table th,.booking-history-table td{padding:8px;font-size:10px;}
+}
+@media (min-width:1200px){
+  .container{padding:40px;}
+  .booking-card{padding:50px;}
+  .services-grid{grid-template-columns:repeat(4,1fr);}
 }
 .loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -317,6 +322,13 @@ const STUDIO_GEO_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.0763
 // ==================== POCKETBASE ====================
 const pb = new PocketBase(PB_URL);
 
+// ==================== КЭШ ДЛЯ ОПТИМИЗАЦИИ ====================
+let slotsCache = {};
+let calendarCache = null;
+let lastCalendarRender = 0;
+let isProcessingDate = false;
+let isProcessingBooking = false;
+
 // ==================== ЗАЩИТА ОТ DDoS ====================
 let requestCount = 0;
 let lastRequestReset = Date.now();
@@ -349,17 +361,31 @@ let tgUser = null;
 let tgUserInfo = '';
 let tgUserId = null;
 
-// ==================== РАБОТА С POCKETBASE (СЛОТЫ) ====================
+// ==================== РАБОТА С POCKETBASE (СЛОТЫ) С КЭШЕМ ====================
 async function loadAvailableSlots(date) {
   if (!date) return [];
   const dateKey = date.toISOString().split('T')[0];
+  
+  // Проверяем кэш (действителен 5 секунд)
+  if (slotsCache[dateKey] && (Date.now() - slotsCache[dateKey].timestamp) < 5000) {
+    return slotsCache[dateKey].slots;
+  }
+  
   try {
     const result = await pb.collection('slots').getList(1, 100, {
       filter: `date = "${dateKey}"`
     });
     const allSlots = ['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
     const bookedTimes = result.items.map(item => item.time);
-    return allSlots.filter(slot => !bookedTimes.includes(slot));
+    const availableSlots = allSlots.filter(slot => !bookedTimes.includes(slot));
+    
+    // Сохраняем в кэш
+    slotsCache[dateKey] = {
+      slots: availableSlots,
+      timestamp: Date.now()
+    };
+    
+    return availableSlots;
   } catch(e) {
     console.error('Error loading slots:', e);
     return [];
@@ -375,6 +401,8 @@ async function bookSlot(date, time) {
     });
     if (existing.items.length > 0) return false;
     await pb.collection('slots').create({ date: dateKey, time: time });
+    // Очищаем кэш для этой даты
+    delete slotsCache[dateKey];
     return true;
   } catch(e) {
     console.error('Error booking slot:', e);
@@ -391,6 +419,7 @@ async function releaseSlot(date, time) {
     });
     if (existing.items.length > 0) {
       await pb.collection('slots').delete(existing.items[0].id);
+      delete slotsCache[dateKey];
     }
   } catch(e) {
     console.error('Error releasing slot:', e);
@@ -450,6 +479,7 @@ async function loadPortfolioFromPB() {
 
 async function addPortfolioItemToPB(title, imageBase64, desc) {
   try {
+    // Для base64 изображений нужно отправить как обычный текст
     const record = await pb.collection('portfolio').create({
       title: title,
       image: imageBase64,
@@ -724,8 +754,15 @@ function selectSize(index) {
   document.querySelector(`.size-btn[data-size-index="${index}"]`).classList.add('selected');
 }
 
-// ==================== КАЛЕНДАРЬ ====================
+// ==================== КАЛЕНДАРЬ (ОПТИМИЗИРОВАННЫЙ) ====================
 async function renderCalendar() {
+  const now = Date.now();
+  if (now - lastCalendarRender < 500 && calendarCache) {
+    // Используем кэш если прошло меньше 500мс
+    const calendarEl = document.getElementById('calendar');
+    if (calendarEl && calendarCache === calendarEl.innerHTML) return;
+  }
+  
   const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -733,6 +770,20 @@ async function renderCalendar() {
   let html = `<div class="cal-header"><button class="cal-nav" onclick="prevMonth()">‹</button><div class="cal-month">${currentMonth.toLocaleString('ru',{month:'long',year:'numeric'}).toUpperCase()}</div><button class="cal-nav" onclick="nextMonth()">›</button></div><div class="cal-weekdays"><div>ПН</div><div>ВТ</div><div>СР</div><div>ЧТ</div><div>ПТ</div><div>СБ</div><div>ВС</div></div><div class="cal-days">`;
   const startOffset = firstDay === 0 ? 6 : firstDay - 1;
   for (let i = 0; i < startOffset; i++) html += `<div class="cal-day disabled"></div>`;
+  
+  // Загружаем слоты для всех дней месяца одним запросом (оптимизация)
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month, daysInMonth);
+  const slotsPromises = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    if (date >= today) {
+      slotsPromises.push(loadAvailableSlots(date));
+    }
+  }
+  const allSlotsResults = await Promise.all(slotsPromises);
+  
+  let slotIndex = 0;
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
     const isPast = date < today;
@@ -740,7 +791,7 @@ async function renderCalendar() {
     const isSelected = selectedDate && selectedDate.toDateString() === date.toDateString();
     let hasFreeSlots = false;
     if (!isPast) {
-      const availableSlots = await loadAvailableSlots(date);
+      const availableSlots = allSlotsResults[slotIndex++];
       hasFreeSlots = availableSlots.length > 0;
     }
     let cls = '';
@@ -750,14 +801,23 @@ async function renderCalendar() {
   }
   html += `</div>`;
   const calendarEl = document.getElementById('calendar');
-  if (calendarEl) calendarEl.innerHTML = html;
+  if (calendarEl) {
+    calendarEl.innerHTML = html;
+    calendarCache = html;
+    lastCalendarRender = Date.now();
+  }
 }
 
 async function selectDate(y,m,d) {
+  if (isProcessingDate) return;
+  isProcessingDate = true;
+  
   selectedDate = new Date(y,m,d);
   selectedTime = null;
   await renderCalendar();
   await renderTimeSlots();
+  
+  setTimeout(() => { isProcessingDate = false; }, 300);
 }
 
 function prevMonth() { 
@@ -921,6 +981,11 @@ function renderSummary() {
 // ==================== ОТПРАВКА ЗАЯВКИ ====================
 async function submitBooking() {
   if (!checkRateLimit()) return;
+  if (isProcessingBooking) {
+    showNotification('⏳ Подождите, предыдущая заявка ещё обрабатывается...');
+    return;
+  }
+  isProcessingBooking = true;
   
   const name = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
@@ -929,17 +994,21 @@ async function submitBooking() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateStr = selectedDate ? `${selectedDate.getDate()} ${mo[selectedDate.getMonth()]} ${selectedDate.getFullYear()}` : '—';
   
+  // Проверка слота с блокировкой
   const availableSlots = await loadAvailableSlots(selectedDate);
   if (!availableSlots.includes(selectedTime)) {
     showNotification('❌ К сожалению, это время уже занято. Выберите другое.');
     await renderTimeSlots();
+    isProcessingBooking = false;
     return;
   }
   
+  // Бронируем слот
   const booked = await bookSlot(selectedDate, selectedTime);
   if (!booked) {
     showNotification('❌ Не удалось забронировать слот. Попробуйте другое время.');
     await renderTimeSlots();
+    isProcessingBooking = false;
     return;
   }
   
@@ -957,7 +1026,8 @@ async function submitBooking() {
     referenceImages: referenceImages,
     tgUser: tgUserInfo,
     tgUserId: tgUserId,
-    status: 'new'
+    status: 'new',
+    reminderSent: false
   };
   
   const savedBooking = await saveBookingToPB(newBooking);
@@ -1001,6 +1071,7 @@ async function submitBooking() {
     btn.disabled = false; 
     btn.innerHTML = 'ОТПРАВИТЬ'; 
   }
+  isProcessingBooking = false;
 }
 
 function resetForm() {
