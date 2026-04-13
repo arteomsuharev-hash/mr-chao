@@ -61,8 +61,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gray-lig
 .size-btn{padding:10px 20px;background:var(--bg-elevated);border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
 .size-btn.selected{border-color:var(--gray-light);background:var(--gray);}
 .size-btn.hidden{display:none;}
-.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
-.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.calendar{background:var(--bg-elevated);border:1px solid var(--border);margin-bottom:20px;}
+.cal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);}
 .cal-month{font-family:'Bebas Neue',sans-serif;font-size:20px;}
 .cal-nav{background:var(--bg-card);border:1px solid var(--border);padding:6px 12px;cursor:pointer;transition:all 0.2s;}
 .cal-nav:hover{background:var(--gray);}
@@ -283,7 +283,7 @@ footer p:last-child{font-size:11px;}
         </label>
         <textarea id="adminDesc" rows="2" placeholder="Описание"></textarea>
         <div class="admin-preview" id="adminPreview"></div>
-        <button class="btn" onclick="addPortfolioItem()">ДОБАВИТЬ</button>
+        <button class="btn" id="addPortfolioBtn">ДОБАВИТЬ</button>
       </div>
     </div>
     
@@ -450,12 +450,12 @@ async function loadPortfolioFromPB() {
 
 async function addPortfolioItemToPB(title, imageBase64, desc) {
   try {
-    await pb.collection('portfolio').create({
+    const record = await pb.collection('portfolio').create({
       title: title,
       image: imageBase64,
       desc: desc
     });
-    return true;
+    return record;
   } catch(e) {
     console.error('Error adding portfolio item:', e);
     throw e;
@@ -506,7 +506,7 @@ function renderAdminPortfolio() {
     list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">Нет работ</div>';
     return;
   }
-  list.innerHTML = portfolio.map((item, idx) => `
+  list.innerHTML = portfolio.map(item => `
     <div class="portfolio-admin-item">
       <div class="portfolio-admin-info">
         <div class="portfolio-admin-title">${escapeHtml(item.title)}</div>
@@ -522,14 +522,21 @@ async function addPortfolioItem() {
   const desc = document.getElementById('adminDesc').value.trim();
   const imageInput = document.getElementById('adminImageFile');
   
-  if (!title) { showNotification('Введите название работы'); return; }
-  if (!imageInput.files || imageInput.files.length === 0) { showNotification('Выберите фото'); return; }
+  if (!title) { 
+    showNotification('❌ Введите название работы'); 
+    return; 
+  }
+  if (!imageInput.files || imageInput.files.length === 0) { 
+    showNotification('❌ Выберите фото'); 
+    return; 
+  }
   
   const file = imageInput.files[0];
   const reader = new FileReader();
   
   reader.onload = async function(e) {
     try {
+      showNotification('⏳ Добавление...');
       await addPortfolioItemToPB(title, e.target.result, desc);
       await refreshPortfolio();
       document.getElementById('adminTitle').value = '';
@@ -538,9 +545,15 @@ async function addPortfolioItem() {
       document.getElementById('adminPreview').innerHTML = '';
       showNotification('✅ Работа добавлена!');
     } catch(err) {
-      showNotification('❌ Ошибка добавления');
+      console.error('Add error:', err);
+      showNotification('❌ Ошибка добавления: ' + (err.message || 'неизвестная ошибка'));
     }
   };
+  
+  reader.onerror = function() {
+    showNotification('❌ Ошибка чтения файла');
+  };
+  
   reader.readAsDataURL(file);
 }
 
@@ -568,6 +581,8 @@ document.getElementById('adminImageFile')?.addEventListener('change', (e) => {
     preview.innerHTML = '';
   }
 });
+
+document.getElementById('addPortfolioBtn')?.addEventListener('click', addPortfolioItem);
 
 // ==================== ИСТОРИЯ ЗАПИСЕЙ ====================
 let allBookings = [];
@@ -773,6 +788,7 @@ async function renderTimeSlots() {
 }
 
 function selectTime(slot) {
+  if (!selectedDate) return;
   selectedTime = slot;
   renderTimeSlots();
 }
