@@ -612,12 +612,23 @@ async function renderCalendar(){
     const cnt=(bkSlots[key]||[]).length;
     const isOff = isOffDay(dt);
     let cls='';
-    if(past) cls='disabled';
-    else if(isOff) cls='off';
-    else if(cnt>=TIMES.length) cls='booked';
+    let clickAttr=' ';
+    
+    if(past) {
+      cls='disabled';
+    } else if(isOff) {
+      cls='off';
+    } else if(cnt>=TIMES.length) {
+      cls='booked';
+    }
+    
     const hasFree = !past && !isOff && cnt < TIMES.length;
-    const click=hasFree?`onclick="pickDate(${y},${m},${d})"`:' ';
-    h+=`<div class="cal-day ${cls} ${isTdy?'today':''} ${isSel?'selected':''}" ${click}>${d}</div>`;
+    
+    if(hasFree) {
+      clickAttr=`onclick="pickDate(${y},${m},${d})"`;
+    }
+    
+    h+=`<div class="cal-day ${cls} ${isTdy?'today':''} ${isSel?'selected':''}" ${clickAttr}>${d}</div>`;
   }
   h+=`</div>`;
   document.getElementById('calendar').innerHTML=h;
@@ -920,14 +931,14 @@ const ro=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecti
 document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
 
 // ═══════════════════════════════
-// INIT (ИСПРАВЛЕННЫЙ — СНАЧАЛА ЗАГРУЖАЕМ ВЫХОДНЫЕ)
+// INIT
 // ═══════════════════════════════
 async function init() {
-  await loadOffDays();        // Сначала загружаем выходные
-  await loadPortfolio();      // Потом портфолио
+  await loadOffDays();
+  await loadPortfolio();
   renderServices();
   renderSizes();
-  await renderCalendar();     // Теперь календарь с учётом выходных
+  await renderCalendar();
   renderTimes();
 }
 init();
