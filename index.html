@@ -920,9 +920,17 @@ const ro=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecti
 document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
 
 // ═══════════════════════════════
-// INIT
+// INIT (ИСПРАВЛЕННЫЙ — СНАЧАЛА ЗАГРУЖАЕМ ВЫХОДНЫЕ)
 // ═══════════════════════════════
-renderServices();renderSizes();renderCalendar();renderTimes();loadPortfolio();loadOffDays();
+async function init() {
+  await loadOffDays();        // Сначала загружаем выходные
+  await loadPortfolio();      // Потом портфолио
+  renderServices();
+  renderSizes();
+  await renderCalendar();     // Теперь календарь с учётом выходных
+  renderTimes();
+}
+init();
 </script>
 </body>
 </html>
