@@ -189,6 +189,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content
 /* ADMIN */
 .admin-block{border:1px solid var(--border);padding:1.8rem;margin-bottom:1.2rem}
 .admin-block h3{font-family:var(--font-d);font-size:1.5rem;font-style:italic;color:var(--accent);margin-bottom:1.2rem;font-weight:300}
+
+/* Кнопки админ-панели */
+.admin-buttons{display:flex;gap:0.8rem;margin-bottom:2rem;flex-wrap:wrap}
+.admin-btn{flex:1;padding:0.8rem;background:transparent;border:1px solid var(--border2);color:var(--silver);font-family:var(--font-b);font-size:9px;letter-spacing:.3em;text-transform:uppercase;cursor:none;transition:all .3s}
+.admin-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.admin-btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.admin-section{display:none}
+.admin-section.active{display:block}
+
 .admin-booking{border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
 .admin-booking .aname{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--white);margin-bottom:.3rem}
 .admin-booking .adetails{font-size:11px;color:var(--silver);line-height:1.7}
@@ -385,29 +394,53 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
   <div class="wrap">
     <p class="section-label">Управление</p>
     <h2 class="section-title" style="margin-bottom:2rem">Административная<br><em>панель</em></h2>
-    <div class="admin-block">
-      <h3>Выходные дни</h3>
-      <div class="field-row">
-        <div class="field"><label>Дата выходного</label><input type="date" id="offDate"></div>
-        <div><button class="btn-sm" id="addOffDayBtn" style="margin-top:1.8rem;">➕ Добавить</button></div>
+    
+    <!-- Кнопки навигации админки -->
+    <div class="admin-buttons">
+      <button class="admin-btn active" data-admin-section="offdays">📅 Выходные</button>
+      <button class="admin-btn" data-admin-section="addwork">➕ Добавить работу</button>
+      <button class="admin-btn" data-admin-section="history">📋 История записей</button>
+      <button class="admin-btn" data-admin-section="portfolio">🖼️ Работы в портфолио</button>
+    </div>
+    
+    <!-- Секция: Выходные дни -->
+    <div class="admin-section active" id="adminOffdays">
+      <div class="admin-block">
+        <h3>Выходные дни</h3>
+        <div class="field-row">
+          <div class="field"><label>Дата выходного</label><input type="date" id="offDate"></div>
+          <div><button class="btn-sm" id="addOffDayBtn" style="margin-top:1.8rem;">➕ Добавить</button></div>
+        </div>
+        <div id="offDaysList" style="margin-top:1rem;"></div>
       </div>
-      <div id="offDaysList" style="margin-top:1rem;"></div>
     </div>
-    <div class="admin-block">
-      <h3>Добавить работу</h3>
-      <div class="field"><label>Название</label><input type="text" id="adminTitle" placeholder="Название работы"></div>
-      <label class="upload-label"><span>📎 Выбрать фото</span><input type="file" id="adminImageFile" accept="image/*"></label>
-      <div id="adminPreview"></div>
-      <div class="field"><label>Описание</label><textarea id="adminDesc" placeholder="Описание..." style="height:60px"></textarea></div>
-      <button class="btn-primary" id="addPortfolioBtn">Добавить</button>
+    
+    <!-- Секция: Добавить работу -->
+    <div class="admin-section" id="adminAddWork">
+      <div class="admin-block">
+        <h3>Добавить работу</h3>
+        <div class="field"><label>Название</label><input type="text" id="adminTitle" placeholder="Название работы"></div>
+        <label class="upload-label"><span>📎 Выбрать фото</span><input type="file" id="adminImageFile" accept="image/*"></label>
+        <div id="adminPreview"></div>
+        <div class="field"><label>Описание</label><textarea id="adminDesc" placeholder="Описание..." style="height:60px"></textarea></div>
+        <button class="btn-primary" id="addPortfolioBtn">Добавить</button>
+      </div>
     </div>
-    <div class="admin-block">
-      <h3>История записей</h3>
-      <div id="bookingsHistoryList"><p class="empty-state">Загрузка...</p></div>
+    
+    <!-- Секция: История записей -->
+    <div class="admin-section" id="adminHistory">
+      <div class="admin-block">
+        <h3>История записей</h3>
+        <div id="bookingsHistoryList"><p class="empty-state">Загрузка...</p></div>
+      </div>
     </div>
-    <div class="admin-block">
-      <h3>Работы в портфолио</h3>
-      <div id="adminPortfolioList"><p class="empty-state">Загрузка...</p></div>
+    
+    <!-- Секция: Работы в портфолио -->
+    <div class="admin-section" id="adminPortfolioListSection">
+      <div class="admin-block">
+        <h3>Работы в портфолио</h3>
+        <div id="adminPortfolioList"><p class="empty-state">Загрузка...</p></div>
+      </div>
     </div>
   </div>
 </div>
@@ -433,6 +466,16 @@ const ADMIN_PASS    = 'chao123';
 const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
 const STUDIO_MAP_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════
+// ФОРМАТИРОВАНИЕ ДАТЫ (ЛОКАЛЬНОЕ)
+// ═══════════════════════════════
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // ═══════════════════════════════
 // REALTIME SUBSCRIPTIONS
@@ -516,7 +559,7 @@ async function removeOffDay(id) {
   notify('Выходной удалён');
 }
 function isOffDay(date) {
-  const dateKey = date.toISOString().split('T')[0];
+  const dateKey = formatLocalDate(date);
   return offDays.some(od => od.date === dateKey);
 }
 
@@ -561,6 +604,22 @@ document.querySelectorAll('.nav-tab,.mobile-nav-btn').forEach(btn=>{
 });
 
 // ═══════════════════════════════
+// ADMIN NAVIGATION (КНОПКИ)
+// ═══════════════════════════════
+document.querySelectorAll('.admin-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.admin-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const section = btn.dataset.adminSection;
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    if (section === 'offdays') document.getElementById('adminOffdays').classList.add('active');
+    if (section === 'addwork') document.getElementById('adminAddWork').classList.add('active');
+    if (section === 'history') document.getElementById('adminHistory').classList.add('active');
+    if (section === 'portfolio') document.getElementById('adminPortfolioListSection').classList.add('active');
+  });
+});
+
+// ═══════════════════════════════
 // SERVICES & SIZES
 // ═══════════════════════════════
 function renderServices(){
@@ -587,11 +646,11 @@ function pickSz(i){
 }
 
 // ═══════════════════════════════
-// CALENDAR
+// CALENDAR (ИСПРАВЛЕННЫЙ)
 // ═══════════════════════════════
 async function loadSlots(y,m){
-  const s=new Date(y,m,1).toISOString().split('T')[0];
-  const e=new Date(y,m+1,0).toISOString().split('T')[0];
+  const s = formatLocalDate(new Date(y,m,1));
+  const e = formatLocalDate(new Date(y,m+1,0));
   const{data}=await sb.from('slots').select('*').gte('date',s).lte('date',e);
   const res={};(data||[]).forEach(r=>{if(!res[r.date])res[r.date]=[];res[r.date].push(r.time);});
   return res;
@@ -606,7 +665,7 @@ async function renderCalendar(){
   const off=first===0?6:first-1;
   for(let i=0;i<off;i++) h+=`<div class="cal-day empty"></div>`;
   for(let d=1;d<=total;d++){
-    const dt=new Date(y,m,d),key=dt.toISOString().split('T')[0];
+    const dt=new Date(y,m,d),key=formatLocalDate(dt);
     const past=dt<today,isTdy=dt.toDateString()===today.toDateString();
     const isSel=selDate&&selDate.toDateString()===dt.toDateString();
     const cnt=(bkSlots[key]||[]).length;
@@ -639,7 +698,7 @@ function nextMon(){calMon=new Date(calMon.getFullYear(),calMon.getMonth()+1,1);r
 function renderTimes(){
   const w=document.getElementById('timeSlots');
   if(!selDate){w.innerHTML='<div style="color:var(--muted);font-size:10px;letter-spacing:.25em;text-transform:uppercase">Выберите дату</div>';return;}
-  const key=selDate.toISOString().split('T')[0],busy=bkSlots[key]||[];
+  const key=formatLocalDate(selDate),busy=bkSlots[key]||[];
   w.innerHTML=TIMES.map(t=>`<div class="time-slot ${busy.includes(t)?'disabled':''} ${selTime===t?'selected':''}" onclick="${!busy.includes(t)?`pickTime('${t}')`:''}">${t}</div>`).join('');
 }
 function pickTime(t){selTime=t;renderTimes();}
@@ -703,7 +762,7 @@ function renderSummary(){
 }
 
 // ═══════════════════════════════
-// SUBMIT
+// SUBMIT (ИСПРАВЛЕННЫЙ)
 // ═══════════════════════════════
 async function submitBooking() {
   const btn = document.getElementById('submitBtn');
@@ -715,7 +774,7 @@ async function submitBooking() {
   const phone = document.getElementById('clientPhone').value.trim();
   const place = document.getElementById('clientPlace').value;
   const idea = document.getElementById('clientIdea').value;
-  const dKey = selDate.toISOString().split('T')[0];
+  const dKey = formatLocalDate(selDate);
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const ds = `${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`;
   
@@ -873,7 +932,7 @@ document.getElementById('adminImageFile').addEventListener('change',e=>{
 });
 
 // ═══════════════════════════════
-// BOOKINGS HISTORY
+// BOOKINGS HISTORY (С УДАЛЕНИЕМ)
 // ═══════════════════════════════
 async function loadBookingsHistory(){
   const{data}=await sb.from('bookings').select('*').order('created_at',{ascending:false});
@@ -887,18 +946,20 @@ function renderBkHistory(){
     const d=b.date?new Date(b.date):null,ds=d?`${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`:'—';
     const stM={new:'st-new',confirmed:'st-confirmed',cancelled:'st-cancelled'};
     const stL={new:'Новая',confirmed:'Подтверждена',cancelled:'Отменена'};
-    return`<div class="admin-booking"><div><div class="aname">${b.name||'—'} · ${b.phone||'—'}</div><div class="adetails">${b.service||'—'} · ${b.size||'—'} · ${ds} ${b.time||''}<br>TG: ${b.tg_user||'—'}</div><div class="astatus ${stM[b.status]||'st-new'}">${stL[b.status]||'Новая'}</div></div>${b.status!=='cancelled'?`<button class="btn-sm" onclick="cancelBk('${b.id}')">Отменить</button>`:''}</div>`;
+    return`<div class="admin-booking"><div><div class="aname">${b.name||'—'} · ${b.phone||'—'}</div><div class="adetails">${b.service||'—'} · ${b.size||'—'} · ${ds} ${b.time||''}<br>TG: ${b.tg_user||'—'}</div><div class="astatus ${stM[b.status]||'st-new'}">${stL[b.status]||'Новая'}</div></div>${b.status!=='cancelled'?`<button class="btn-sm" onclick="cancelBk('${b.id}')">Удалить</button>`:''}</div>`;
   }).join('');
 }
 async function cancelBk(id){
+  // Получаем запись перед удалением
   const {data: booking} = await sb.from('bookings').select('*').eq('id',id).single();
   if(booking && booking.date && booking.time){
-    const dateKey = new Date(booking.date).toISOString().split('T')[0];
+    const dateKey = formatLocalDate(new Date(booking.date));
     await sb.from('slots').delete().eq('date',dateKey).eq('time',booking.time);
   }
-  await sb.from('bookings').update({status:'cancelled'}).eq('id',id);
+  // Удаляем запись из БД
+  await sb.from('bookings').delete().eq('id',id);
   await loadBookingsHistory();
-  notify('Запись отменена, слот освобождён');
+  notify('✅ Запись удалена, слот освобождён');
 }
 
 // ═══════════════════════════════
