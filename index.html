@@ -134,9 +134,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content
 .cal-day.empty{border-color:transparent;background:transparent}
 .cal-day.disabled{opacity:.2;pointer-events:none}
 .cal-day.booked{opacity:.25;text-decoration:line-through;pointer-events:none}
+.cal-day.off{background:rgba(100,100,100,0.2);color:var(--muted);text-decoration:line-through;pointer-events:none}
 .cal-day.today{color:var(--light)}
 .cal-day.selected{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
-.cal-day:not(.disabled):not(.booked):not(.empty):hover{border-color:rgba(200,169,110,.4);color:var(--light)}
+.cal-day:not(.disabled):not(.booked):not(.off):not(.empty):hover{border-color:rgba(200,169,110,.4);color:var(--light)}
 
 /* TIME */
 .time-slots{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1.5rem}
@@ -207,7 +208,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content
 @keyframes notifIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* FOOTER */
-footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto}
+footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto}
 .footer-logo{font-family:var(--font-d);font-size:1.4rem;font-style:italic;color:var(--accent);font-weight:300}
 .footer-address{font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--silver);text-align:center;line-height:1.8}
 .footer-links{display:flex;gap:1.5rem}
@@ -230,7 +231,7 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
   .services-grid{grid-template-columns:1fr}
   .field-row{grid-template-columns:1fr}
   .portfolio-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
-  footer{flex-direction:column;gap:1.2rem;text-align:center}
+  footer{flex-direction:column;gap:1rem;text-align:center;padding:1.5rem}
   body{cursor:auto}
   .cursor,.cursor-ring{display:none}
   .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(8,8,8,.97);border-top:1px solid var(--border);z-index:500;backdrop-filter:blur(8px)}
@@ -385,6 +386,14 @@ footer{border-top:1px solid var(--border);padding:2.5rem;display:flex;justify-co
     <p class="section-label">Управление</p>
     <h2 class="section-title" style="margin-bottom:2rem">Административная<br><em>панель</em></h2>
     <div class="admin-block">
+      <h3>Выходные дни</h3>
+      <div class="field-row">
+        <div class="field"><label>Дата выходного</label><input type="date" id="offDate"></div>
+        <div><button class="btn-sm" id="addOffDayBtn" style="margin-top:1.8rem;">➕ Добавить</button></div>
+      </div>
+      <div id="offDaysList" style="margin-top:1rem;"></div>
+    </div>
+    <div class="admin-block">
       <h3>Добавить работу</h3>
       <div class="field"><label>Название</label><input type="text" id="adminTitle" placeholder="Название работы"></div>
       <label class="upload-label"><span>📎 Выбрать фото</span><input type="file" id="adminImageFile" accept="image/*"></label>
@@ -449,17 +458,67 @@ sb.channel('portfolio-realtime')
   })
   .subscribe();
 
+sb.channel('offdays-realtime')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'offdays' }, () => {
+    loadOffDays();
+    renderCalendar();
+  })
+  .subscribe();
+
 // ═══════════════════════════════
 // STATE
 // ═══════════════════════════════
 let cStep=1, selSvc=null, selSz=null, selDate=null, selTime=null;
-let calMon=new Date(), bkSlots={};
+let calMon=new Date(), bkSlots={}, offDays=[];
 let tgUser=null, tgInfo='Гость', tgId=null;
 let allBk=[], portfolio=[];
 let mediaFiles = [];
-const TIMES=['11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+const TIMES=['11:00','16:00'];
 const SVCS=[{name:'Новая татуировка',price:'от 8 000 ₽'},{name:'Перекрытие',price:'от 10 000 ₽'},{name:'Доработка',price:'от 8 000 ₽'},{name:'Консультация',price:'Бесплатно'}];
 const SZS=['S (до 5 см)','M (5–12 см)','L (12–25 см)','XL (25+ см)'];
+
+// ═══════════════════════════════
+// OFF DAYS FUNCTIONS
+// ═══════════════════════════════
+async function loadOffDays() {
+  const { data } = await sb.from('offdays').select('*').order('date', { ascending: true });
+  offDays = data || [];
+  renderOffDaysList();
+}
+function renderOffDaysList() {
+  const container = document.getElementById('offDaysList');
+  if (!container) return;
+  if (offDays.length === 0) {
+    container.innerHTML = '<div class="empty-state" style="padding:0.5rem; font-size:10px;">Нет выходных дней</div>';
+    return;
+  }
+  container.innerHTML = offDays.map(od => `
+    <div class="admin-port-row" style="padding:0.5rem 1rem;">
+      <span>📅 ${od.date}</span>
+      <button class="btn-sm" onclick="removeOffDay('${od.id}')">Удалить</button>
+    </div>
+  `).join('');
+}
+async function addOffDay() {
+  const date = document.getElementById('offDate').value;
+  if (!date) { notify('Выберите дату'); return; }
+  const { error } = await sb.from('offdays').insert([{ date: date }]);
+  if (error) { notify('Ошибка добавления'); return; }
+  document.getElementById('offDate').value = '';
+  await loadOffDays();
+  await renderCalendar();
+  notify('✅ Выходной добавлен');
+}
+async function removeOffDay(id) {
+  await sb.from('offdays').delete().eq('id', id);
+  await loadOffDays();
+  await renderCalendar();
+  notify('Выходной удалён');
+}
+function isOffDay(date) {
+  const dateKey = date.toISOString().split('T')[0];
+  return offDays.some(od => od.date === dateKey);
+}
 
 // ═══════════════════════════════
 // CURSOR
@@ -551,8 +610,13 @@ async function renderCalendar(){
     const past=dt<today,isTdy=dt.toDateString()===today.toDateString();
     const isSel=selDate&&selDate.toDateString()===dt.toDateString();
     const cnt=(bkSlots[key]||[]).length;
-    let cls=past?'disabled':cnt>=TIMES.length?'booked':'';
-    const click=!past&&cnt<TIMES.length?`onclick="pickDate(${y},${m},${d})"`:' ';
+    const isOff = isOffDay(dt);
+    let cls='';
+    if(past) cls='disabled';
+    else if(isOff) cls='off';
+    else if(cnt>=TIMES.length) cls='booked';
+    const hasFree = !past && !isOff && cnt < TIMES.length;
+    const click=hasFree?`onclick="pickDate(${y},${m},${d})"`:' ';
     h+=`<div class="cal-day ${cls} ${isTdy?'today':''} ${isSel?'selected':''}" ${click}>${d}</div>`;
   }
   h+=`</div>`;
@@ -628,7 +692,7 @@ function renderSummary(){
 }
 
 // ═══════════════════════════════
-// SUBMIT (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+// SUBMIT
 // ═══════════════════════════════
 async function submitBooking() {
   const btn = document.getElementById('submitBtn');
@@ -644,7 +708,15 @@ async function submitBooking() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const ds = `${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`;
   
-  // 1. Атомарная проверка: существует ли уже такой слот?
+  // Проверка на выходной
+  if (isOffDay(selDate)) {
+    notify('❌ В этот день выходной. Выберите другую дату.');
+    btn.disabled = false;
+    ldr.classList.remove('show');
+    return;
+  }
+  
+  // 1. Проверка существования слота
   const { data: existing, error: checkErr } = await sb
     .from('slots')
     .select('*')
@@ -702,7 +774,6 @@ async function submitBooking() {
   if (bookingErr) {
     console.error('Booking insert error:', bookingErr);
     notify('❌ Ошибка сохранения записи');
-    // Откатываем слот
     await sb.from('slots').delete().eq('date', dKey).eq('time', selTime);
     btn.disabled = false;
     ldr.classList.remove('show');
@@ -731,7 +802,7 @@ async function submitBooking() {
     } catch(e) { console.error('Error sending media:', e); }
   }
   
-  // 6. Отправляем клиенту подтверждение с адресом
+  // 6. Отправляем клиенту подтверждение
   if (tgId) {
     const clientMsg = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${ds}\n⏰ ${selTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selSvc?.name}\n\n📍 Адрес студии: ${STUDIO_ADDRESS}\n🗺️ Карта: ${STUDIO_MAP_URL}\n\n⚠️ Если нужно отменить запись, напишите мастеру в Telegram: @mchao_tattoo`;
     try {
@@ -827,13 +898,15 @@ document.getElementById('navLogo').addEventListener('click',e=>{
   e.preventDefault();clicks++;
   if(timer) clearTimeout(timer);
   timer=setTimeout(()=>{clicks=0;},900);
-  if(clicks>=15){clicks=0;clearTimeout(timer);const pwd=prompt('Пароль:');if(pwd===ADMIN_PASS){localStorage.setItem('isAdmin','1');document.getElementById('adminNavBtn').style.display='';document.getElementById('adminMobileBtn').style.display='';notify('Админ активирован');}else if(pwd!==null) notify('Неверный пароль');}
+  if(clicks>=15){clicks=0;clearTimeout(timer);const pwd=prompt('Пароль:');if(pwd===ADMIN_PASS){localStorage.setItem('isAdmin','1');document.getElementById('adminNavBtn').style.display='';document.getElementById('adminMobileBtn').style.display='';notify('Админ активирован');loadOffDays();}else if(pwd!==null) notify('Неверный пароль');}
 });
 if(localStorage.getItem('isAdmin')==='1'){
   document.getElementById('adminNavBtn').style.display='';
   document.getElementById('adminMobileBtn').style.display='';
+  loadOffDays();
 }
 document.getElementById('adminMobileBtn').addEventListener('click',()=>showPanel('admin'));
+document.getElementById('addOffDayBtn').addEventListener('click',addOffDay);
 
 // ═══════════════════════════════
 // NOTIFY
@@ -849,7 +922,7 @@ document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
 // ═══════════════════════════════
 // INIT
 // ═══════════════════════════════
-renderServices();renderSizes();renderCalendar();renderTimes();loadPortfolio();
+renderServices();renderSizes();renderCalendar();renderTimes();loadPortfolio();loadOffDays();
 </script>
 </body>
 </html>
