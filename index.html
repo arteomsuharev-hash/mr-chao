@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>MR. CHAO TATTOO</title>
 
-<!-- PWA (вариант 2 — через JavaScript, без дополнительных файлов) -->
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <script>
   (function() {
     const manifest = {
@@ -17,16 +23,8 @@
       theme_color: "#080808",
       background_color: "#080808",
       icons: [
-        {
-          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23c8a96e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23080808'%3E🖤%3C/text%3E%3C/svg%3E",
-          sizes: "192x192",
-          type: "image/svg+xml"
-        },
-        {
-          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23c8a96e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23080808'%3E🖤%3C/text%3E%3C/svg%3E",
-          sizes: "512x512",
-          type: "image/svg+xml"
-        }
+        { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { src: "/icon-512.png", sizes: "512x512", type: "image/png" }
       ]
     };
     const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
@@ -36,10 +34,6 @@
     document.head.appendChild(link);
   })();
 </script>
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23c8a96e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23080808'%3E🖤%3C/text%3E%3C/svg%3E">
-<meta name="theme-color" content="#080808">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -322,7 +316,7 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
     <div class="hero-vline top"></div>
     <div class="hero-vline bottom"></div>
     <p class="hero-label">Авторская татуировка</p>
-    <h1 class="hero-title">Mr. Chao<em>Tattoo</em></h1>
+    <h1 class="hero-title" id="heroTitleClick">Mr. <em>Chao</em> Tattoo</h1>
     <p class="hero-sub">Индивидуальный подход · Каждая работа уникальна</p>
     <button class="hero-cta" onclick="showPanel('booking')">Записаться <span>→</span></button>
     <div class="hero-scroll">Scroll</div>
@@ -647,6 +641,43 @@ document.querySelectorAll('.admin-btn').forEach(btn => {
     if (section === 'portfolio') document.getElementById('adminPortfolioListSection').classList.add('active');
   });
 });
+
+// ═══════════════════════════════
+// ADMIN UNLOCK (15 НАЖАТИЙ ПО "Mr" В ЦЕНТРЕ)
+// ═══════════════════════════════
+let clicks=0, clickTimer=null;
+const heroTitle = document.getElementById('heroTitleClick');
+if (heroTitle) {
+  heroTitle.addEventListener('click', (e) => {
+    e.preventDefault();
+    clicks++;
+    if (clickTimer) clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => { clicks = 0; }, 800);
+    if (clicks >= 15) {
+      clicks = 0;
+      clearTimeout(clickTimer);
+      const pwd = prompt('Введите пароль администратора:');
+      if (pwd === ADMIN_PASS) {
+        localStorage.setItem('isAdmin', '1');
+        document.getElementById('adminNavBtn').style.display = '';
+        document.getElementById('adminMobileBtn').style.display = '';
+        notify('✅ Админ-панель активирована');
+        loadOffDays();
+      } else if (pwd !== null) {
+        notify('❌ Неверный пароль');
+      }
+    }
+  });
+}
+
+// Проверяем при загрузке, активирована ли админка
+if (localStorage.getItem('isAdmin') === '1') {
+  document.getElementById('adminNavBtn').style.display = '';
+  document.getElementById('adminMobileBtn').style.display = '';
+  loadOffDays();
+}
+document.getElementById('adminMobileBtn').addEventListener('click', () => showPanel('admin'));
+document.getElementById('addOffDayBtn').addEventListener('click', addOffDay);
 
 // ═══════════════════════════════
 // SERVICES & SIZES
@@ -981,24 +1012,6 @@ async function cancelBk(id){
   await loadBookingsHistory();
   notify('✅ Запись удалена, слот освобождён');
 }
-
-// ═══════════════════════════════
-// ADMIN UNLOCK (15 кликов по логотипу)
-// ═══════════════════════════════
-let clicks=0,timer=null;
-document.getElementById('navLogo').addEventListener('click',e=>{
-  e.preventDefault();clicks++;
-  if(timer) clearTimeout(timer);
-  timer=setTimeout(()=>{clicks=0;},900);
-  if(clicks>=15){clicks=0;clearTimeout(timer);const pwd=prompt('Пароль:');if(pwd===ADMIN_PASS){localStorage.setItem('isAdmin','1');document.getElementById('adminNavBtn').style.display='';document.getElementById('adminMobileBtn').style.display='';notify('Админ активирован');loadOffDays();}else if(pwd!==null) notify('Неверный пароль');}
-});
-if(localStorage.getItem('isAdmin')==='1'){
-  document.getElementById('adminNavBtn').style.display='';
-  document.getElementById('adminMobileBtn').style.display='';
-  loadOffDays();
-}
-document.getElementById('adminMobileBtn').addEventListener('click',()=>showPanel('admin'));
-document.getElementById('addOffDayBtn').addEventListener('click',addOffDay);
 
 // ═══════════════════════════════
 // NOTIFY
