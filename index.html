@@ -233,83 +233,121 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .8s ease,transform .8s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
 
-/* ========== АДАПТИВ ДЛЯ РАЗНЫХ ЭКРАНОВ ========== */
-/* iPhone SE, маленькие телефоны (до 480px) */
-@media (max-width: 480px) {
+/* ========== МОБИЛЬНАЯ ВЕРСИЯ (ДО 700px) ========== */
+@media (max-width: 700px) {
   .container { padding: 12px; }
-  .wrap, .wrap-wide { padding: 0 1rem; }
-  .panel { padding: 4rem 0 3rem; }
-  .hero-title { font-size: clamp(2.5rem, 10vw, 4rem); }
+  .wrap, .wrap-wide { padding: 0 1.2rem; }
+  .panel { padding: 5rem 0 4rem; }
+  
+  /* Скрываем десктопную навигацию */
+  .nav-tabs { display: none; }
+  .user-badge { display: none; }
+  
+  /* Показываем мобильную навигацию */
+  .mobile-nav { display: flex; }
+  .admin-mobile-btn { display: block; }
+  
+  /* Адаптация сеток */
+  .services-grid { grid-template-columns: 1fr; }
+  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .time-slots { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .field-row { grid-template-columns: 1fr; }
+  .admin-buttons { flex-wrap: wrap; }
+  .admin-btn { font-size: 7px; padding: 0.5rem; }
+  
+  /* Отключаем кастомный курсор на телефонах */
+  .cursor, .cursor-ring { display: none; }
+  body { cursor: auto; }
+  
+  /* Убираем лишние отступы */
+  .hero-title { font-size: clamp(3rem, 10vw, 4rem); }
   .hero-label { font-size: 7px; letter-spacing: 0.3em; }
   .hero-sub { font-size: 7px; letter-spacing: 0.2em; }
   .hero-cta { padding: 0.6rem 1.2rem; font-size: 7px; }
+  
+  /* Адаптация шагов */
+  .step-tab { padding: 0.6rem 0.3rem; }
   .step-num-d { font-size: 1.2rem; }
   .step-lbl { font-size: 6px; }
-  .step-tab { padding: 0.6rem 0.3rem; }
-  .cal-day { height: 28px; font-size: 10px; }
-  .time-slots { grid-template-columns: repeat(2, 1fr); }
-  .services-grid { grid-template-columns: 1fr; }
-  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .about-grid { grid-template-columns: 1fr; gap: 2rem; }
-  .about-cards { grid-template-columns: 1fr 1fr; }
-  .field-row { grid-template-columns: 1fr; gap: 0.8rem; }
-  .admin-buttons { gap: 0.4rem; }
-  .admin-btn { padding: 0.5rem; font-size: 7px; }
-  footer { flex-direction: column; text-align: center; padding: 1.2rem; }
-  .cursor, .cursor-ring { display: none; }
-  body { cursor: auto; }
+  
+  /* Адаптация календаря */
+  .cal-day { height: 32px; font-size: 11px; }
+  .time-slots { grid-template-columns: repeat(3, 1fr); }
+  
+  /* Футер */
+  footer { flex-direction: column; text-align: center; padding: 1.5rem; gap: 1rem; }
 }
 
-/* Стандартные телефоны (481px - 700px) */
-@media (min-width: 481px) and (max-width: 700px) {
-  .container { padding: 15px; }
-  .wrap, .wrap-wide { padding: 0 1.2rem; }
+/* ========== МОБИЛЬНАЯ НАВИГАЦИЯ ========== */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(8,8,8,.97);
+  border-top: 1px solid var(--border);
+  z-index: 500;
+  backdrop-filter: blur(8px);
+}
+.mobile-nav-btn {
+  flex: 1;
+  padding: .8rem .5rem .6rem;
+  background: transparent;
+  border: none;
+  color: var(--silver);
+  font-family: var(--font-b);
+  font-size: 7px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color .3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+}
+.mobile-nav-btn.active, .mobile-nav-btn:hover { color: var(--accent); }
+.mobile-nav-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+
+.admin-mobile-btn {
+  position: fixed;
+  top: 70px;
+  right: 10px;
+  z-index: 501;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 12px;
+  font-size: 10px;
+  letter-spacing: .2em;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  font-family: var(--font-b);
+  border-radius: 0;
+  display: none;
+}
+
+/* ========== ПЛАНШЕТЫ (701px - 900px) ========== */
+@media (min-width: 701px) and (max-width: 900px) {
+  .mobile-nav { display: none; }
+  .admin-mobile-btn { display: none; }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
   .time-slots { grid-template-columns: repeat(3, 1fr); }
-  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-  .about-grid { grid-template-columns: 1fr; gap: 2rem; }
-  .cal-day { height: 32px; font-size: 11px; }
-  .cursor, .cursor-ring { display: none; }
-  body { cursor: auto; }
-  .mobile-nav { display: flex; }
-  .nav-tabs { display: none; }
-  .user-badge { display: none; }
-  .admin-mobile-btn { display: block; }
-}
-
-/* Большие телефоны и планшеты (701px - 900px) */
-@media (min-width: 701px) and (max-width: 900px) {
-  .services-grid { grid-template-columns: repeat(3, 1fr); }
-  .time-slots { grid-template-columns: repeat(4, 1fr); }
   .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-  .mobile-nav { display: none; }
 }
 
-/* Планшеты (901px - 1200px) */
-@media (min-width: 901px) and (max-width: 1200px) {
-  .wrap { max-width: 760px; }
-  .services-grid { grid-template-columns: repeat(3, 1fr); }
-  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-  .time-slots { grid-template-columns: repeat(5, 1fr); }
+/* ========== ПК И БОЛЬШИЕ ЭКРАНЫ (901px+) ========== */
+@media (min-width: 901px) {
   .mobile-nav { display: none; }
-}
-
-/* ПК и большие экраны (1201px и выше) */
-@media (min-width: 1201px) {
-  .container { max-width: 1400px; margin: 0 auto; }
-  .wrap { max-width: 860px; }
-  .wrap-wide { max-width: 1200px; }
+  .admin-mobile-btn { display: none; }
   .services-grid { grid-template-columns: repeat(4, 1fr); }
   .time-slots { grid-template-columns: repeat(5, 1fr); }
-  .mobile-nav { display: none; }
+  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .wrap { max-width: 860px; }
+  .wrap-wide { max-width: 1100px; }
 }
-
-/* Мобильная навигация */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(8,8,8,.97);border-top:1px solid var(--border);z-index:500;backdrop-filter:blur(8px)}
-.mobile-nav-btn{flex:1;padding:.8rem .5rem .6rem;background:transparent;border:none;color:var(--silver);font-family:var(--font-b);font-size:7px;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;transition:color .3s;display:flex;flex-direction:column;align-items:center;gap:.2rem}
-.mobile-nav-btn.active,.mobile-nav-btn:hover{color:var(--accent)}
-.mobile-nav-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
-.admin-mobile-btn{position:fixed;top:70px;right:10px;z-index:501;background:rgba(0,0,0,0.7);border:1px solid var(--accent);color:var(--accent);padding:8px 12px;font-size:10px;letter-spacing:.2em;cursor:pointer;backdrop-filter:blur(8px);font-family:var(--font-b);border-radius:0;display:none}
 </style>
 </head>
 <body>
