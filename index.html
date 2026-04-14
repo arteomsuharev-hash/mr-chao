@@ -561,6 +561,43 @@ const STUDIO_MAP_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.0763
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // ═══════════════════════════════
+// ФУНКЦИЯ СЖАТИЯ ИЗОБРАЖЕНИЙ
+// ═══════════════════════════════
+async function compressImage(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          const compressedReader = new FileReader();
+          compressedReader.readAsDataURL(blob);
+          compressedReader.onload = () => resolve(compressedReader.result);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+}
+
+// ═══════════════════════════════
 // ЧАСОВОЙ ПОЯС (ХАБАРОВСК/ВЛАДИВОСТОК UTC+10)
 // ═══════════════════════════════
 const TIMEZONE_OFFSET = 10 * 60 * 60 * 1000; // UTC+10
@@ -855,19 +892,37 @@ function renderTimes(){
 function pickTime(t){selTime=t;renderTimes();}
 
 // ═══════════════════════════════
-// MEDIA UPLOAD
+// MEDIA UPLOAD С СЖАТИЕМ
 // ═══════════════════════════════
-document.getElementById('mediaInput').addEventListener('change', function(e) {
+document.getElementById('mediaInput').addEventListener('change', async function(e) {
   const files = Array.from(e.target.files);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      mediaFiles.push(ev.target.result);
-      renderMediaPreview();
-    };
-    reader.readAsDataURL(file);
-  });
+  for (const file of files) {
+    try {
+      let finalImage;
+      if (file.size > 1 * 1024 * 1024) { // если файл больше 1MB
+        showNotification('⏳ Сжатие фото...');
+        finalImage = await compressImage(file, 600, 0.6);
+      } else {
+        const reader = new FileReader();
+        finalImage = await new Promise((resolve) => {
+          reader.onload = (ev) => resolve(ev.target.result);
+          reader.readAsDataURL(file);
+        });
+      }
+      mediaFiles.push(finalImage);
+    } catch(err) {
+      console.error('Error compressing image:', err);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        mediaFiles.push(ev.target.result);
+        renderMediaPreview();
+      };
+      reader.readAsDataURL(file);
+    }
+    renderMediaPreview();
+  }
   e.target.value = '';
+  if (files.length > 0) showNotification('✅ Фото добавлено');
 });
 function removeMedia(index) {
   mediaFiles.splice(index, 1);
@@ -1046,7 +1101,7 @@ function resetForm(){
 }
 
 // ═══════════════════════════════
-// PORTFOLIO
+// PORTFOLIO (С СЖАТИЕМ ПРИ ДОБАВЛЕНИИ)
 // ═══════════════════════════════
 async function loadPortfolio(){
   const{data}=await sb.from('portfolio').select('*').order('created_at',{ascending:false});
@@ -1063,16 +1118,48 @@ function renderAdminPortfolio(){
   el.innerHTML=portfolio.map(p=>`<div class="admin-port-row"><span class="admin-port-title">${p.title}</span><button class="btn-sm" onclick="delPort('${p.id}')">Удалить</button></div>`).join('');
 }
 async function delPort(id){if(!confirm('Удалить?'))return;await sb.from('portfolio').delete().eq('id',id);await loadPortfolio();notify('Работа удалена');}
-document.getElementById('addPortfolioBtn').addEventListener('click',async()=>{
-  const t=document.getElementById('adminTitle').value.trim(),d=document.getElementById('adminDesc').value.trim(),f=document.getElementById('adminImageFile').files[0];
-  if(!t||!f){notify('Заполните название и выберите фото');return;}
-  const r=new FileReader();
-  r.onload=async e=>{await sb.from('portfolio').insert([{title:t,image:e.target.result,description:d}]);await loadPortfolio();document.getElementById('adminTitle').value='';document.getElementById('adminDesc').value='';document.getElementById('adminImageFile').value='';document.getElementById('adminPreview').innerHTML='';notify('✅ Работа добавлена');};
-  r.readAsDataURL(f);
+document.getElementById('addPortfolioBtn').addEventListener('click', async () => {
+  const title = document.getElementById('adminTitle').value.trim();
+  const desc = document.getElementById('adminDesc').value.trim();
+  const imageInput = document.getElementById('adminImageFile');
+  
+  if (!title) { notify('Заполните название работы'); return; }
+  if (!imageInput.files || imageInput.files.length === 0) { notify('Выберите фото'); return; }
+  
+  const file = imageInput.files[0];
+  
+  try {
+    let finalImage;
+    if (file.size > 1 * 1024 * 1024) { // если файл больше 1MB
+      notify('⏳ Сжатие фото...');
+      finalImage = await compressImage(file, 800, 0.7);
+    } else {
+      const reader = new FileReader();
+      finalImage = await new Promise((resolve) => {
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    await sb.from('portfolio').insert([{ title: title, image: finalImage, description: desc }]);
+    await loadPortfolio();
+    document.getElementById('adminTitle').value = '';
+    document.getElementById('adminDesc').value = '';
+    document.getElementById('adminImageFile').value = '';
+    document.getElementById('adminPreview').innerHTML = '';
+    notify('✅ Работа добавлена');
+  } catch(err) {
+    console.error('Add error:', err);
+    notify('❌ Ошибка добавления');
+  }
 });
-document.getElementById('adminImageFile').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=ev=>{document.getElementById('adminPreview').innerHTML=`<img src="${ev.target.result}" style="max-width:100%;margin-top:.8rem;border:1px solid var(--border)">`;};r.readAsDataURL(f);
+document.getElementById('adminImageFile').addEventListener('change', e => {
+  const preview = document.getElementById('adminPreview');
+  const file = e.target.files[0];
+  if (!file) { preview.innerHTML = ''; return; }
+  const reader = new FileReader();
+  reader.onload = ev => { preview.innerHTML = `<img src="${ev.target.result}" style="max-width:100%; margin-top:.8rem; border:1px solid var(--border)">`; };
+  reader.readAsDataURL(file);
 });
 
 // ═══════════════════════════════
@@ -1107,6 +1194,11 @@ async function cancelBk(id){
 // ═══════════════════════════════
 // НАПОМИНАНИЯ (С УЧЁТОМ ЧАСОВОГО ПОЯСА UTC+10)
 // ═══════════════════════════════
+async function getAllBookingsFromSupabase() {
+  const { data } = await sb.from('bookings').select('*').order('created_at', { ascending: false });
+  return data || [];
+}
+
 async function checkReminders() {
   const todayLocal = getTodayLocal();
   const bookings = await getAllBookingsFromSupabase();
@@ -1123,7 +1215,7 @@ async function checkReminders() {
     
     if (diffDays === 1 && !booking.reminder_sent) {
       try {
-        await supabase.from('bookings').update({ reminder_sent: true }).eq('id', booking.id);
+        await sb.from('bookings').update({ reminder_sent: true }).eq('id', booking.id);
         
         if (booking.tg_user_id) {
           const message = `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_MAP_URL}\n\nДо встречи!`;
