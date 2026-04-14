@@ -238,16 +238,10 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
   .container { padding: 12px; }
   .wrap, .wrap-wide { padding: 0 1.2rem; }
   .panel { padding: 5rem 0 4rem; }
-  
-  /* Скрываем десктопную навигацию */
   .nav-tabs { display: none !important; }
   .user-badge { display: none !important; }
-  
-  /* Показываем мобильную навигацию */
   .mobile-nav { display: flex !important; }
   .admin-mobile-btn { display: block !important; }
-  
-  /* Адаптация сеток */
   .services-grid { grid-template-columns: 1fr !important; }
   .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; }
   .time-slots { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)) !important; }
@@ -255,30 +249,18 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
   .field-row { grid-template-columns: 1fr; }
   .admin-buttons { flex-wrap: wrap; }
   .admin-btn { font-size: 7px; padding: 0.5rem; }
-  
-  /* Отключаем кастомный курсор на телефонах */
   .cursor, .cursor-ring { display: none !important; }
   body { cursor: auto !important; }
-  
-  /* Убираем лишние отступы */
   .hero-title { font-size: clamp(3rem, 10vw, 4rem); }
   .hero-label { font-size: 7px; letter-spacing: 0.3em; }
   .hero-sub { font-size: 7px; letter-spacing: 0.2em; }
   .hero-cta { padding: 0.6rem 1.2rem; font-size: 7px; }
-  
-  /* Адаптация шагов */
   .step-tab { padding: 0.6rem 0.3rem; }
   .step-num-d { font-size: 1.2rem; }
   .step-lbl { font-size: 6px; }
-  
-  /* Адаптация календаря */
   .cal-day { height: 32px; font-size: 11px; }
   .time-slots { grid-template-columns: repeat(3, 1fr) !important; }
-  
-  /* Кнопка "Назад" всегда видна */
   .btn-secondary { display: block !important; width: 100%; margin-top: 0.5rem; }
-  
-  /* Футер */
   footer { flex-direction: column; text-align: center; padding: 1.5rem; gap: 1rem; }
 }
 
@@ -577,6 +559,27 @@ const ADMIN_PASS    = 'chao123';
 const STUDIO_ADDRESS = 'Хабаровск, ул. Ленинградская, 73Б';
 const STUDIO_MAP_URL = 'https://2gis.ru/khabarovsk/geo/4926447747624359/135.076312,48.494886';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ═══════════════════════════════
+// ЧАСОВОЙ ПОЯС (ХАБАРОВСК/ВЛАДИВОСТОК UTC+10)
+// ═══════════════════════════════
+const TIMEZONE_OFFSET = 10 * 60 * 60 * 1000; // UTC+10
+
+function getLocalDate(date) {
+  return new Date(date.getTime() + TIMEZONE_OFFSET);
+}
+
+function getTodayLocal() {
+  const now = new Date();
+  return new Date(now.getTime() + TIMEZONE_OFFSET);
+}
+
+function getDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // ═══════════════════════════════
 // ФОРМАТИРОВАНИЕ ДАТЫ (ЛОКАЛЬНОЕ)
@@ -1102,6 +1105,43 @@ async function cancelBk(id){
 }
 
 // ═══════════════════════════════
+// НАПОМИНАНИЯ (С УЧЁТОМ ЧАСОВОГО ПОЯСА UTC+10)
+// ═══════════════════════════════
+async function checkReminders() {
+  const todayLocal = getTodayLocal();
+  const bookings = await getAllBookingsFromSupabase();
+  
+  for (const booking of bookings) {
+    if (booking.status === 'cancelled') continue;
+    if (!booking.date) continue;
+    
+    const bookingDateUTC = new Date(booking.date);
+    const bookingDateLocal = getLocalDate(bookingDateUTC);
+    
+    const diffTime = bookingDateLocal - todayLocal;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1 && !booking.reminder_sent) {
+      try {
+        await supabase.from('bookings').update({ reminder_sent: true }).eq('id', booking.id);
+        
+        if (booking.tg_user_id) {
+          const message = `🔔 НАПОМИНАНИЕ!\n\nЗавтра в ${booking.time} у вас запись к MR. CHAO.\n\n📍 ${booking.place || 'Место уточните у мастера'}\n\n🗺️ Адрес студии: ${STUDIO_ADDRESS}\n📍 Карта: ${STUDIO_MAP_URL}\n\nДо встречи!`;
+          
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: booking.tg_user_id, text: message })
+          });
+          
+          console.log(`✅ Напоминание отправлено для записи ${booking.id}`);
+        }
+      } catch(e) { console.error('Reminder error:', e); }
+    }
+  }
+}
+
+// ═══════════════════════════════
 // NOTIFY
 // ═══════════════════════════════
 function notify(msg){const n=document.createElement('div');n.className='notification';n.textContent=msg;document.body.appendChild(n);setTimeout(()=>n.remove(),3500);}
@@ -1122,6 +1162,10 @@ async function init() {
   renderSizes();
   await renderCalendar();
   renderTimes();
+  
+  // Запускаем проверку напоминаний каждый час
+  setInterval(checkReminders, 60 * 60 * 1000);
+  checkReminders();
 }
 init();
 </script>
