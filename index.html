@@ -240,25 +240,25 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
   .panel { padding: 5rem 0 4rem; }
   
   /* Скрываем десктопную навигацию */
-  .nav-tabs { display: none; }
-  .user-badge { display: none; }
+  .nav-tabs { display: none !important; }
+  .user-badge { display: none !important; }
   
   /* Показываем мобильную навигацию */
-  .mobile-nav { display: flex; }
-  .admin-mobile-btn { display: block; }
+  .mobile-nav { display: flex !important; }
+  .admin-mobile-btn { display: block !important; }
   
   /* Адаптация сеток */
-  .services-grid { grid-template-columns: 1fr; }
-  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-  .time-slots { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  .services-grid { grid-template-columns: 1fr !important; }
+  .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; }
+  .time-slots { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)) !important; }
   .about-grid { grid-template-columns: 1fr; gap: 2rem; }
   .field-row { grid-template-columns: 1fr; }
   .admin-buttons { flex-wrap: wrap; }
   .admin-btn { font-size: 7px; padding: 0.5rem; }
   
   /* Отключаем кастомный курсор на телефонах */
-  .cursor, .cursor-ring { display: none; }
-  body { cursor: auto; }
+  .cursor, .cursor-ring { display: none !important; }
+  body { cursor: auto !important; }
   
   /* Убираем лишние отступы */
   .hero-title { font-size: clamp(3rem, 10vw, 4rem); }
@@ -273,7 +273,7 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
   
   /* Адаптация календаря */
   .cal-day { height: 32px; font-size: 11px; }
-  .time-slots { grid-template-columns: repeat(3, 1fr); }
+  .time-slots { grid-template-columns: repeat(3, 1fr) !important; }
   
   /* Кнопка "Назад" всегда видна */
   .btn-secondary { display: block !important; width: 100%; margin-top: 0.5rem; }
@@ -338,8 +338,8 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
 
 /* ========== ПЛАНШЕТЫ (701px - 900px) ========== */
 @media (min-width: 701px) and (max-width: 900px) {
-  .mobile-nav { display: none; }
-  .admin-mobile-btn { display: none; }
+  .mobile-nav { display: none !important; }
+  .admin-mobile-btn { display: none !important; }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
   .time-slots { grid-template-columns: repeat(3, 1fr); }
   .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
@@ -347,8 +347,8 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
 
 /* ========== ПК И БОЛЬШИЕ ЭКРАНЫ (901px+) ========== */
 @media (min-width: 901px) {
-  .mobile-nav { display: none; }
-  .admin-mobile-btn { display: none; }
+  .mobile-nav { display: none !important; }
+  .admin-mobile-btn { display: none !important; }
   .services-grid { grid-template-columns: repeat(4, 1fr); }
   .time-slots { grid-template-columns: repeat(5, 1fr); }
   .portfolio-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
