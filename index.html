@@ -2,8 +2,45 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>MR. CHAO TATTOO</title>
+
+<!-- PWA (вариант 2 — через JavaScript, без дополнительных файлов) -->
+<script>
+  (function() {
+    const manifest = {
+      name: "Mr. Chao Tattoo",
+      short_name: "Chao Tattoo",
+      description: "Запись на тату-сеансы",
+      start_url: ".",
+      display: "standalone",
+      theme_color: "#080808",
+      background_color: "#080808",
+      icons: [
+        {
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23c8a96e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23080808'%3E🖤%3C/text%3E%3C/svg%3E",
+          sizes: "192x192",
+          type: "image/svg+xml"
+        },
+        {
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23c8a96e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23080808'%3E🖤%3C/text%3E%3C/svg%3E",
+          sizes: "512x512",
+          type: "image/svg+xml"
+        }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  })();
+</script>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23c8a96e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23080808'%3E🖤%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
@@ -189,15 +226,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content
 /* ADMIN */
 .admin-block{border:1px solid var(--border);padding:1.8rem;margin-bottom:1.2rem}
 .admin-block h3{font-family:var(--font-d);font-size:1.5rem;font-style:italic;color:var(--accent);margin-bottom:1.2rem;font-weight:300}
-
-/* Кнопки админ-панели */
 .admin-buttons{display:flex;gap:0.8rem;margin-bottom:2rem;flex-wrap:wrap}
 .admin-btn{flex:1;padding:0.8rem;background:transparent;border:1px solid var(--border2);color:var(--silver);font-family:var(--font-b);font-size:9px;letter-spacing:.3em;text-transform:uppercase;cursor:none;transition:all .3s}
 .admin-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
 .admin-btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
 .admin-section{display:none}
 .admin-section.active{display:block}
-
 .admin-booking{border:1px solid var(--border);padding:1rem 1.2rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
 .admin-booking .aname{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--white);margin-bottom:.3rem}
 .admin-booking .adetails{font-size:11px;color:var(--silver);line-height:1.7}
@@ -395,7 +429,6 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
     <p class="section-label">Управление</p>
     <h2 class="section-title" style="margin-bottom:2rem">Административная<br><em>панель</em></h2>
     
-    <!-- Кнопки навигации админки -->
     <div class="admin-buttons">
       <button class="admin-btn active" data-admin-section="offdays">📅 Выходные</button>
       <button class="admin-btn" data-admin-section="addwork">➕ Добавить работу</button>
@@ -403,7 +436,6 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
       <button class="admin-btn" data-admin-section="portfolio">🖼️ Работы в портфолио</button>
     </div>
     
-    <!-- Секция: Выходные дни -->
     <div class="admin-section active" id="adminOffdays">
       <div class="admin-block">
         <h3>Выходные дни</h3>
@@ -415,7 +447,6 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
       </div>
     </div>
     
-    <!-- Секция: Добавить работу -->
     <div class="admin-section" id="adminAddWork">
       <div class="admin-block">
         <h3>Добавить работу</h3>
@@ -427,7 +458,6 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
       </div>
     </div>
     
-    <!-- Секция: История записей -->
     <div class="admin-section" id="adminHistory">
       <div class="admin-block">
         <h3>История записей</h3>
@@ -435,7 +465,6 @@ footer{border-top:1px solid var(--border);padding:2rem 2.5rem;display:flex;justi
       </div>
     </div>
     
-    <!-- Секция: Работы в портфолио -->
     <div class="admin-section" id="adminPortfolioListSection">
       <div class="admin-block">
         <h3>Работы в портфолио</h3>
@@ -604,7 +633,7 @@ document.querySelectorAll('.nav-tab,.mobile-nav-btn').forEach(btn=>{
 });
 
 // ═══════════════════════════════
-// ADMIN NAVIGATION (КНОПКИ)
+// ADMIN NAVIGATION
 // ═══════════════════════════════
 document.querySelectorAll('.admin-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -646,7 +675,7 @@ function pickSz(i){
 }
 
 // ═══════════════════════════════
-// CALENDAR (ИСПРАВЛЕННЫЙ)
+// CALENDAR
 // ═══════════════════════════════
 async function loadSlots(y,m){
   const s = formatLocalDate(new Date(y,m,1));
@@ -762,7 +791,7 @@ function renderSummary(){
 }
 
 // ═══════════════════════════════
-// SUBMIT (ИСПРАВЛЕННЫЙ)
+// SUBMIT
 // ═══════════════════════════════
 async function submitBooking() {
   const btn = document.getElementById('submitBtn');
@@ -778,7 +807,6 @@ async function submitBooking() {
   const mo = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const ds = `${selDate.getDate()} ${mo[selDate.getMonth()]} ${selDate.getFullYear()}`;
   
-  // Проверка на выходной
   if (isOffDay(selDate)) {
     notify('❌ В этот день выходной. Выберите другую дату.');
     btn.disabled = false;
@@ -786,7 +814,6 @@ async function submitBooking() {
     return;
   }
   
-  // 1. Проверка существования слота
   const { data: existing, error: checkErr } = await sb
     .from('slots')
     .select('*')
@@ -808,7 +835,6 @@ async function submitBooking() {
     return;
   }
   
-  // 2. Вставляем слот
   const { error: slotErr } = await sb
     .from('slots')
     .insert([{ date: dKey, time: selTime }]);
@@ -825,7 +851,6 @@ async function submitBooking() {
     return;
   }
   
-  // 3. Сохраняем запись
   const { error: bookingErr } = await sb
     .from('bookings')
     .insert([{
@@ -850,7 +875,6 @@ async function submitBooking() {
     return;
   }
   
-  // 4. Отправляем мастеру
   const msgToMaster = `🖤 НОВАЯ ЗАЯВКА — MR. CHAO TATTOO 🖤\n\n👤 ${name}\n📞 ${phone}\n✈️ ${tgInfo}\n\n📋 ${selSvc?.name}\n📐 ${selSz || '—'}\n📅 ${ds} в ${selTime}\n📍 ${place}\n💬 ${idea || '—'}\n📎 Медиафайлов: ${mediaFiles.length}`;
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -860,7 +884,6 @@ async function submitBooking() {
     });
   } catch(e) { console.error('Error sending to master:', e); }
   
-  // 5. Отправляем медиа мастеру
   for (let i = 0; i < mediaFiles.length; i++) {
     try {
       const blob = await (await fetch(mediaFiles[i])).blob();
@@ -872,7 +895,6 @@ async function submitBooking() {
     } catch(e) { console.error('Error sending media:', e); }
   }
   
-  // 6. Отправляем клиенту подтверждение
   if (tgId) {
     const clientMsg = `✅ Ваша запись к MR. CHAO подтверждена!\n\n📅 ${ds}\n⏰ ${selTime}\n\n📍 Место: ${place || 'Не указано'}\n🎨 ${selSvc?.name}\n\n📍 Адрес студии: ${STUDIO_ADDRESS}\n🗺️ Карта: ${STUDIO_MAP_URL}\n\n⚠️ Если нужно отменить запись, напишите мастеру в Telegram: @mchao_tattoo`;
     try {
@@ -932,7 +954,7 @@ document.getElementById('adminImageFile').addEventListener('change',e=>{
 });
 
 // ═══════════════════════════════
-// BOOKINGS HISTORY (С УДАЛЕНИЕМ)
+// BOOKINGS HISTORY
 // ═══════════════════════════════
 async function loadBookingsHistory(){
   const{data}=await sb.from('bookings').select('*').order('created_at',{ascending:false});
@@ -950,13 +972,11 @@ function renderBkHistory(){
   }).join('');
 }
 async function cancelBk(id){
-  // Получаем запись перед удалением
   const {data: booking} = await sb.from('bookings').select('*').eq('id',id).single();
   if(booking && booking.date && booking.time){
     const dateKey = formatLocalDate(new Date(booking.date));
     await sb.from('slots').delete().eq('date',dateKey).eq('time',booking.time);
   }
-  // Удаляем запись из БД
   await sb.from('bookings').delete().eq('id',id);
   await loadBookingsHistory();
   notify('✅ Запись удалена, слот освобождён');
